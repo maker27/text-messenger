@@ -26,6 +26,10 @@ const eslintConfig = defineConfig([
   {
     files: ['src/**/*.test.ts'],
     ...vitest.configs.recommended,
+    rules: {
+      ...vitest.configs.recommended.rules,
+      'vitest/consistent-test-it': ['error', { fn: 'test', withinDescribe: 'test' }],
+    },
   },
   {
     files: ['src/**'],

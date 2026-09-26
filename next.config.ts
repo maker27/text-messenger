@@ -18,6 +18,7 @@ const basePath = z
 const nextConfig: NextConfig = {
   basePath,
   output: 'standalone',
+  poweredByHeader: false,
   reactCompiler: true,
 };
 
