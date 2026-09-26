@@ -28,7 +28,7 @@ const eslintConfig = defineConfig([
     ...vitest.configs.recommended,
   },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/**'],
     plugins: { boundaries },
     settings: {
       'boundaries/elements': [
@@ -90,6 +90,8 @@ const eslintConfig = defineConfig([
           ],
         },
       ],
+      'boundaries/no-unknown-dependencies': 'error',
+      'boundaries/no-unknown-files': 'error',
     },
   },
   prettier,
