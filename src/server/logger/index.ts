@@ -1,6 +1,6 @@
 import 'server-only';
 
-import pino, { type DestinationStream, type LevelWithSilent } from 'pino';
+import pino, { type DestinationStream, type LevelWithSilent, type Logger } from 'pino';
 
 import { env } from '@/server/env';
 
@@ -14,4 +14,10 @@ export function createLogger(level: LevelWithSilent, destination: DestinationStr
   );
 }
 
-export const logger = createLogger(env.LOG_LEVEL, pino.destination(1));
+let defaultLogger: Logger | null = null;
+
+// The build evaluates modules with an unvalidated environment, so the level is read on first use.
+export function getLogger() {
+  defaultLogger ??= createLogger(env.LOG_LEVEL, pino.destination(1));
+  return defaultLogger;
+}

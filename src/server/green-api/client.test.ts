@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { parsePhoneNumber } from '@/entities/chat/phone-number';
 import { MESSENGERS } from '@/entities/messenger/config';
 import type { MessengerConfig } from '@/entities/messenger/model';
-import { logger } from '@/server/logger';
+import { getLogger } from '@/server/logger';
 
 import { createGreenApiClient } from './client';
 import {
@@ -138,7 +138,7 @@ test('reports an empty notification queue as null', async () => {
 });
 
 test('keeps the receipt id of a malformed notification', async () => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
   server.setReply({
     body: '{"receiptId":5,"body":{"typeWebhook":"incomingMessageReceived"}}',
     status: 200,

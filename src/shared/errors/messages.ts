@@ -2,6 +2,8 @@ import type { GreenApiError, PhoneNumberErrorCode } from './model';
 
 const GREEN_API_ERROR_MESSAGES = {
   accountNotFound: (messengerTitle) => `Номер не зарегистрирован в ${messengerTitle}`,
+  instanceNotAuthorized: () =>
+    'Инстанс не авторизован. Отсканируйте QR-код или авторизуйте его в личном кабинете GREEN-API',
   instanceTypeMismatch: (messengerTitle) => `Этот инстанс не относится к ${messengerTitle}`,
   invalidResponse: () => 'Сервис GREEN-API вернул неожиданный ответ. Повторите позже',
   network: () => 'Нет связи с GREEN-API. Проверьте подключение и повторите',

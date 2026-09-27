@@ -3,7 +3,7 @@ import 'server-only';
 import type { z } from 'zod';
 
 import type { MessengerId } from '@/entities/messenger/model';
-import { logger } from '@/server/logger';
+import { getLogger } from '@/server/logger';
 import type { GreenApiError } from '@/shared/errors/model';
 import type { Result } from '@/shared/errors/result';
 
@@ -159,7 +159,7 @@ export async function requestGreenApi<Schema extends z.ZodType>(
     return result;
   }
   const { error, status } = result.error;
-  logger.warn(
+  getLogger().warn(
     { code: error.code, messenger: request.messengerId, method: request.method, status },
     'GREEN-API request failed',
   );

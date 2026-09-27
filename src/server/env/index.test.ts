@@ -26,6 +26,28 @@ test('applies defaults for empty optional variables', async () => {
   expect(env.GREEN_API_MOCK_URL).toBe('http://127.0.0.1:3100');
 });
 
+test('accepts a 32-character session secret', async () => {
+  vi.stubEnv('SESSION_SECRET', 'a'.repeat(32));
+
+  const env = await importEnv();
+
+  expect(env.SESSION_SECRET).toBe('a'.repeat(32));
+});
+
+test('skips validation during the production build', async () => {
+  vi.stubEnv('NEXT_PHASE', 'phase-production-build');
+  vi.stubEnv('SESSION_SECRET', '');
+
+  await expect(importEnv()).resolves.toBeDefined();
+});
+
+test('validates at runtime of the production server', async () => {
+  vi.stubEnv('NEXT_PHASE', 'phase-production-server');
+  vi.stubEnv('SESSION_SECRET', '');
+
+  await expect(importEnv()).rejects.toThrow('Invalid environment variables');
+});
+
 test('parses the real mode flag', async () => {
   vi.stubEnv('REAL_MODE_ENABLED', 'true');
 
@@ -39,6 +61,8 @@ test.each([
   ['GREEN_API_MOCK_URL', 'ftp://mock'],
   ['GREEN_API_MOCK_URL', ''],
   ['LOG_LEVEL', 'verbose'],
+  ['SESSION_SECRET', ''],
+  ['SESSION_SECRET', 'a'.repeat(31)],
 ])('rejects %s=%j', async (name, value) => {
   vi.stubEnv(name, value);
 

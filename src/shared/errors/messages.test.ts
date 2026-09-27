@@ -5,6 +5,7 @@ import type { GreenApiError } from './model';
 
 const FAILURE_CODES = [
   'accountNotFound',
+  'instanceNotAuthorized',
   'instanceTypeMismatch',
   'invalidResponse',
   'network',
@@ -23,6 +24,12 @@ test.each(FAILURE_CODES)('has a message for %s', (code) => {
 test('names the messenger when the account is not found', () => {
   expect(getGreenApiErrorMessage({ code: 'accountNotFound' }, 'Telegram')).toBe(
     'Номер не зарегистрирован в Telegram',
+  );
+});
+
+test('points to the account dashboard when the instance is not authorized', () => {
+  expect(getGreenApiErrorMessage({ code: 'instanceNotAuthorized' }, 'MAX')).toBe(
+    'Инстанс не авторизован. Отсканируйте QR-код или авторизуйте его в личном кабинете GREEN-API',
   );
 });
 

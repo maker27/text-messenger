@@ -1,6 +1,11 @@
-import { expect, test } from 'vitest';
+import { PHASE_PRODUCTION_BUILD } from 'next/constants';
+import { afterEach, expect, test, vi } from 'vitest';
 
 import { createLogger } from './index';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 function createMemoryLogger(level: 'info' | 'silent') {
   const lines: string[] = [];
@@ -38,4 +43,12 @@ test('writes nothing at the silent level', () => {
   logger.error('failure');
 
   expect(lines).toEqual([]);
+});
+
+test('loads during the build without the host environment', async () => {
+  vi.resetModules();
+  vi.stubEnv('NEXT_PHASE', PHASE_PRODUCTION_BUILD);
+  vi.stubEnv('LOG_LEVEL', undefined);
+
+  await expect(import('./index')).resolves.toHaveProperty('getLogger');
 });

@@ -1,6 +1,6 @@
 import { afterEach, expect, test, vi } from 'vitest';
 
-import { logger } from '@/server/logger';
+import { getLogger } from '@/server/logger';
 
 import { notificationEnvelopeSchema, parseNotification } from './notification';
 
@@ -101,7 +101,7 @@ test('parses a quoted reply as a text message', () => {
 });
 
 test('parses an incoming message without a sender name', () => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
 
   const notification = parseNotification(
     {
@@ -148,7 +148,7 @@ test('parses an outgoing message status', () => {
 });
 
 test('keeps the receipt id of an irrelevant notification without logging', () => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
 
   const notification = parseNotification(
     {
@@ -167,7 +167,7 @@ test('keeps the receipt id of an irrelevant notification without logging', () =>
 });
 
 test('keeps the receipt id of a non-text message without logging', () => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
 
   const notification = parseNotification(
     {
@@ -194,7 +194,7 @@ test.each([
   'garbage',
   null,
 ])('keeps the receipt id of a malformed body %j and logs it', (body) => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
 
   expect(parseNotification({ body, receiptId: 10 }, 'max')).toEqual({
     event: null,

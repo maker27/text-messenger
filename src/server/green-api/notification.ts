@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import type { ChatMessage, MessageStatus } from '@/entities/message/model';
 import type { MessengerId } from '@/entities/messenger/model';
-import { logger } from '@/server/logger';
+import { getLogger } from '@/server/logger';
 
 import { toMessageStatus, toMilliseconds } from './message';
 
@@ -46,7 +46,7 @@ const outgoingStatusSchema = z.object({
   typeWebhook: z.literal('outgoingMessageStatus'),
 });
 
-type NotificationEvent =
+export type NotificationEvent =
   | { message: ChatMessage; type: 'message' }
   | { chatId: string; idMessage: string; status: MessageStatus; type: 'status' };
 
@@ -108,7 +108,7 @@ export function parseNotification(
   }
   const event = notificationEventSchema.safeParse(body);
   if (!event.success) {
-    logger.warn(
+    getLogger().warn(
       { code: 'invalidResponse', messenger: messengerId, method: 'receiveNotification' },
       'GREEN-API notification is malformed',
     );

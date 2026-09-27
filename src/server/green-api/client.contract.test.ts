@@ -1,9 +1,3 @@
-import { spawn } from 'node:child_process';
-import { once } from 'node:events';
-import { createInterface } from 'node:readline';
-import type { Readable } from 'node:stream';
-import { fileURLToPath } from 'node:url';
-
 import { afterAll, beforeAll, expect, test } from 'vitest';
 
 import { parsePhoneNumber } from '@/entities/chat/phone-number';
@@ -13,11 +7,9 @@ import type { MessengerId } from '@/entities/messenger/model';
 
 import { createGreenApiClient } from './client';
 import { apiTokenInstanceSchema } from './credentials';
+import { startMockProcess } from './mock-process';
 import { createTestCredentials, unwrapResult } from './test-server';
 
-const MOCK_SERVER_PATH = fileURLToPath(new URL('../../../mock/server.ts', import.meta.url));
-const MOCK_ENV = { PORT: '0', REPLY_DELAY_MS: '50', STATUS_DELAY_MS: '10' };
-const LISTENING_PATTERN = /listening on (http:\/\/\S+)/;
 const PHONE_NUMBER = '+7 916 123-45-67';
 const MESSAGE_TEXT = 'Привет';
 // Shorter than the Vitest test timeout, so a contract mismatch fails on the aborted request.
@@ -33,38 +25,16 @@ const EXPECTED_STATUSES = {
   whatsapp: ['sent', 'delivered', 'read'],
 } satisfies Record<MessengerId, MessageStatus[]>;
 
-function spawnMock() {
-  return spawn(process.execPath, [MOCK_SERVER_PATH], {
-    env: { ...process.env, ...MOCK_ENV },
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-}
-
-async function readOrigin(stdout: Readable) {
-  const lines = createInterface({ input: stdout });
-  for await (const line of lines) {
-    const origin = LISTENING_PATTERN.exec(line)?.[1];
-    if (origin !== undefined) {
-      lines.close();
-      return origin;
-    }
-  }
-  throw new Error('Mock server exited before listening');
-}
-
-let mock: ReturnType<typeof spawnMock>;
-let mockExit: ReturnType<typeof once>;
+let mock: Awaited<ReturnType<typeof startMockProcess>>;
 let origin: string;
 
 beforeAll(async () => {
-  mock = spawnMock();
-  mockExit = once(mock, 'exit');
-  origin = await readOrigin(mock.stdout);
+  mock = await startMockProcess();
+  origin = mock.origin;
 });
 
 afterAll(async () => {
-  mock.kill();
-  await mockExit;
+  await mock.stop();
 });
 
 test.each(Object.values(MESSENGERS))(

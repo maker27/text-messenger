@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { z } from 'zod';
 
-import { logger } from '@/server/logger';
+import { getLogger } from '@/server/logger';
 
 import {
   createTestCredentials,
@@ -206,7 +206,7 @@ test('reports a network error when the upstream is unreachable', async () => {
 });
 
 test('logs a failure without the token or the URL', async () => {
-  const warn = vi.spyOn(logger, 'warn');
+  const warn = vi.spyOn(getLogger(), 'warn');
   server.setReply({ body: ERROR_BODY, status: 401 });
 
   await requestState();

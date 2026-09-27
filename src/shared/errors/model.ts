@@ -1,5 +1,6 @@
 type GreenApiFailureCode =
   | 'accountNotFound'
+  | 'instanceNotAuthorized'
   | 'instanceTypeMismatch'
   | 'invalidResponse'
   | 'network'
