@@ -7,17 +7,22 @@
     "build": "next build && shx cp -r .next/static .next/standalone/.next/",
     "start": "node .next/standalone/server.js",
     "lint": "eslint --max-warnings=0",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p mock",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
+    "mock": "node mock/server.ts",
     "knip": "knip",
     "prepare": "husky"
   },
   "dependencies": {
+    "@t3-oss/env-nextjs": "0.13.11",
+    "libphonenumber-js": "1.13.14",
     "next": "16.3.6",
+    "pino": "10.3.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {

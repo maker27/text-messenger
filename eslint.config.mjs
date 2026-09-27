@@ -24,7 +24,7 @@ const eslintConfig = defineConfig([
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    files: ['src/**/*.test.ts'],
+    files: ['src/**/*.test.ts', 'mock/**/*.test.ts'],
     ...vitest.configs.recommended,
     rules: {
       ...vitest.configs.recommended.rules,

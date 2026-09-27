@@ -5,7 +5,12 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    env: {
+      GREEN_API_MOCK_URL: 'http://127.0.0.1:3100',
+      LOG_LEVEL: 'silent',
+    },
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'mock/**/*.test.ts'],
+    setupFiles: ['./vitest.setup.ts'],
   },
 });
