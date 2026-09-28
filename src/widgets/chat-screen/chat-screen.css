@@ -1,0 +1,110 @@
+.message-bubble {
+  background-image: none;
+  border-radius: var(--bubble-radius);
+  position: relative;
+}
+
+.message-bubble[data-direction="outgoing"] {
+  background-image: var(--bubble-out-gradient, none);
+}
+
+.message-bubble[data-direction="outgoing"][data-group-position="first"] {
+  border-bottom-right-radius: var(--bubble-radius-grouped);
+}
+
+.message-bubble[data-direction="outgoing"][data-group-position="middle"] {
+  border-bottom-right-radius: var(--bubble-radius-grouped);
+  border-top-right-radius: var(--bubble-radius-grouped);
+}
+
+.message-bubble[data-direction="outgoing"][data-group-position="last"] {
+  border-top-right-radius: var(--bubble-radius-grouped);
+}
+
+.message-bubble[data-direction="incoming"][data-group-position="first"] {
+  border-bottom-left-radius: var(--bubble-radius-grouped);
+}
+
+.message-bubble[data-direction="incoming"][data-group-position="middle"] {
+  border-bottom-left-radius: var(--bubble-radius-grouped);
+  border-top-left-radius: var(--bubble-radius-grouped);
+}
+
+.message-bubble[data-direction="incoming"][data-group-position="last"] {
+  border-top-left-radius: var(--bubble-radius-grouped);
+}
+
+[data-messenger="telegram"] .message-bubble[data-group-position="last"]::after,
+[data-messenger="telegram"] .message-bubble[data-group-position="single"]::after {
+  bottom: 0;
+  content: "";
+  height: 12px;
+  position: absolute;
+  width: 10px;
+}
+
+[data-messenger="telegram"]
+  .message-bubble[data-direction="outgoing"][data-group-position="last"]::after,
+[data-messenger="telegram"]
+  .message-bubble[data-direction="outgoing"][data-group-position="single"]::after {
+  background-color: var(--bubble-out);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+  right: -6px;
+}
+
+[data-messenger="telegram"]
+  .message-bubble[data-direction="incoming"][data-group-position="last"]::after,
+[data-messenger="telegram"]
+  .message-bubble[data-direction="incoming"][data-group-position="single"]::after {
+  background-color: var(--bubble-in);
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  left: -6px;
+}
+
+[data-messenger="whatsapp"] .message-bubble[data-group-position="first"]::after,
+[data-messenger="whatsapp"] .message-bubble[data-group-position="single"]::after {
+  content: "";
+  height: 12px;
+  position: absolute;
+  top: 0;
+  width: 10px;
+}
+
+[data-messenger="whatsapp"]
+  .message-bubble[data-direction="outgoing"][data-group-position="first"]::after,
+[data-messenger="whatsapp"]
+  .message-bubble[data-direction="outgoing"][data-group-position="single"]::after {
+  background-color: var(--bubble-out);
+  clip-path: polygon(0 0, 0 100%, 100% 0);
+  right: -6px;
+}
+
+[data-messenger="whatsapp"]
+  .message-bubble[data-direction="incoming"][data-group-position="first"]::after,
+[data-messenger="whatsapp"]
+  .message-bubble[data-direction="incoming"][data-group-position="single"]::after {
+  background-color: var(--bubble-in);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  left: -6px;
+}
+
+.composer-shell {
+  position: relative;
+}
+
+[data-messenger="telegram"] .composer-shell {
+  padding: 8px 12px 12px;
+}
+
+[data-messenger="whatsapp"] .composer-shell,
+[data-messenger="max"] .composer-shell {
+  background-color: var(--surface-muted);
+  padding: 8px 12px;
+}
+
+[data-messenger="telegram"] .composer {
+  background-color: var(--surface);
+  border-radius: var(--composer-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  padding: 8px 8px 8px 16px;
+}

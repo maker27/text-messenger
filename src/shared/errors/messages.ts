@@ -1,4 +1,4 @@
-import type { GreenApiError, PhoneNumberErrorCode } from './model';
+import type { GreenApiError, LoginField, LoginReason, PhoneNumberErrorCode } from './model';
 
 const GREEN_API_ERROR_MESSAGES = {
   accountNotFound: (messengerTitle) => `Номер не зарегистрирован в ${messengerTitle}`,
@@ -34,3 +34,22 @@ export function getPhoneNumberErrorMessage(code: PhoneNumberErrorCode, messenger
     ? 'Введите номер телефона в международном формате, например +7 916 123-45-67'
     : `${messengerTitle} не работает с номерами этой страны`;
 }
+
+const LOGIN_FIELD_ERROR_MESSAGES = {
+  apiTokenInstance: 'Введите apiTokenInstance из личного кабинета GREEN-API',
+  apiUrl: 'Укажите адрес API из личного кабинета GREEN-API',
+  consent: 'Подтвердите согласие на обработку персональных данных',
+  idInstance: 'Введите idInstance — только цифры',
+} satisfies Record<LoginField, string>;
+
+export function getLoginFieldErrorMessage(field: LoginField) {
+  return LOGIN_FIELD_ERROR_MESSAGES[field];
+}
+
+export function getLoginReasonMessage(reason: LoginReason, messengerTitle: string) {
+  return reason === 'sessionExpired'
+    ? 'Сессия истекла. Войдите снова'
+    : getGreenApiErrorMessage({ code: reason }, messengerTitle);
+}
+
+export const UNEXPECTED_ERROR_MESSAGE = 'Не удалось показать экран. Повторите попытку';

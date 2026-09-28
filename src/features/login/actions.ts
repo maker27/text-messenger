@@ -26,7 +26,7 @@ import { parseLoginForm, type LoginFormError } from './login-form-schema';
 
 const UNKNOWN_CLIENT_KEY = 'unknown';
 
-type LoginError = GreenApiError | LoginFormError;
+export type LoginError = GreenApiError | LoginFormError;
 
 interface LogoutError {
   code: 'invalidInput' | 'unauthorized';

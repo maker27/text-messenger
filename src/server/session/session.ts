@@ -13,13 +13,14 @@ import {
   idInstanceSchema,
   type GreenApiCredentials,
 } from '@/server/green-api/credentials';
+import { getCookiePath } from '@/shared/cookies/cookie-path';
 import type { Result } from '@/shared/errors/result';
 
 const SESSION_TTL_SECONDS = 24 * 60 * 60;
 
 export const sessionModeSchema = z.enum(['demo', 'real']);
 
-type SessionMode = z.infer<typeof sessionModeSchema>;
+export type SessionMode = z.infer<typeof sessionModeSchema>;
 
 export interface Session {
   credentials: GreenApiCredentials;
@@ -52,43 +53,33 @@ function createSessionCookieSchema(messengerId: MessengerId) {
   });
 }
 
-function getCookiePath() {
-  const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
-
-  return basePath === '' ? '/' : basePath;
+function getSessionCookieName(messengerId: MessengerId) {
+  return `tm_${messengerId}`;
 }
 
 function getSessionCookie(cookies: CookieStore, messengerId: MessengerId) {
   return getIronSession<SessionCookie>(cookies, {
-    cookieName: `tm_${messengerId}`,
+    cookieName: getSessionCookieName(messengerId),
     cookieOptions: { httpOnly: true, path: getCookiePath(), sameSite: 'strict', secure: true },
     password: env.SESSION_SECRET,
     ttl: SESSION_TTL_SECONDS,
   });
 }
 
-export async function readSession(
-  cookies: CookieStore,
+function parseSessionCookie(
+  sessionCookie: unknown,
   messengerId: MessengerId,
-): Promise<Result<Session, SessionError>> {
-  const sessionCookie = await getSessionCookie(cookies, messengerId);
-  if (cookies.get(`tm_${messengerId}`) === undefined) {
-    return { error: { code: 'unauthorized' }, ok: false };
-  }
-
+): Result<Session, SessionError> {
   const payload = createSessionCookieSchema(messengerId).safeParse(sessionCookie);
   if (!payload.success) {
-    sessionCookie.destroy();
     return { error: { code: 'unauthorized' }, ok: false };
   }
   const { apiTokenInstance, idInstance, mode, sessionId } = payload.data;
   if (mode === 'real' && !env.REAL_MODE_ENABLED) {
-    sessionCookie.destroy();
     return { error: { code: 'realModeDisabled' }, ok: false };
   }
   const apiUrl = getApiUrlSchema().safeParse(payload.data.apiUrl);
   if (!apiUrl.success) {
-    sessionCookie.destroy();
     return { error: { code: 'unauthorized' }, ok: false };
   }
 
@@ -101,6 +92,27 @@ export async function readSession(
     },
     ok: true,
   };
+}
+
+// Server Components cannot write cookies, so they read without dropping an invalid cookie.
+export async function peekSession(
+  cookies: CookieStore,
+  messengerId: MessengerId,
+): Promise<Result<Session, SessionError>> {
+  return parseSessionCookie(await getSessionCookie(cookies, messengerId), messengerId);
+}
+
+export async function readSession(
+  cookies: CookieStore,
+  messengerId: MessengerId,
+): Promise<Result<Session, SessionError>> {
+  const sessionCookie = await getSessionCookie(cookies, messengerId);
+  const session = parseSessionCookie(sessionCookie, messengerId);
+  if (!session.ok && cookies.get(getSessionCookieName(messengerId)) !== undefined) {
+    sessionCookie.destroy();
+  }
+
+  return session;
 }
 
 export async function saveSession(

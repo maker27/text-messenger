@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { MESSENGERS } from './config';
+import { MESSENGER_ORDER, MESSENGERS } from './config';
 
 test.each(Object.entries(MESSENGERS))('keys %s by its own id', (key, config) => {
   expect(config.id).toBe(key);
@@ -36,4 +36,8 @@ test.each([
   ],
 ])('matches the GREEN-API limits of $title', (config, expected) => {
   expect(config).toMatchObject(expected);
+});
+
+test('orders every messenger exactly once', () => {
+  expect([...MESSENGER_ORDER].sort()).toEqual(Object.keys(MESSENGERS).sort());
 });

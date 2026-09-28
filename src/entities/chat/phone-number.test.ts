@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { parsePhoneNumber } from './phone-number';
+import { formatPhoneNumber, formatPhoneNumberInput, parsePhoneNumber } from './phone-number';
 
 const MAX_COUNTRY_CODES = ['7', '375'];
 
@@ -43,4 +43,31 @@ test('rejects numbers of other countries', () => {
     ok: false,
     error: 'countryNotAllowed',
   });
+});
+
+test.each([
+  ['79161234567', '+7 916 123 45 67'],
+  ['375291234567', '+375 29 123 45 67'],
+])('formats %s for display', (value, expected) => {
+  const phoneNumber = parsePhoneNumber(value, null);
+
+  expect(phoneNumber.ok && formatPhoneNumber(phoneNumber.data)).toBe(expected);
+});
+
+test.each([
+  ['', ''],
+  ['+', ''],
+  ['abc', ''],
+  ['7', '+7'],
+  ['7916', '+7 916'],
+  ['79161234567', '+7 916 123 45 67'],
+  ['+7 (916) 123-45-67', '+7 916 123 45 67'],
+  ['+1 650 253 0000', '+1 650 253 0000'],
+  ['799999999999999', '+7 99999999999999'],
+])('formats input %j as %j', (value, expected) => {
+  expect(formatPhoneNumberInput(value)).toBe(expected);
+});
+
+test('rejects input longer than an international number', () => {
+  expect(formatPhoneNumberInput('7999999999999999')).toBeNull();
 });

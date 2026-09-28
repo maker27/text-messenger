@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 
-import { checkAccountSchema, checkWhatsappSchema } from './chat-id';
+import { checkAccountSchema, checkWhatsappSchema, parseChatId, parseRouteChatId } from './chat-id';
 
 test.each([
   [{ chatId: '10000000123', exist: true }, '10000000123'],
@@ -68,3 +68,43 @@ test.each([{ chatId: '79161234567@g.us', existsWhatsapp: true }, { existsWhatsap
     expect(checkWhatsappSchema.safeParse(response).success).toBe(false);
   },
 );
+
+test.each([
+  ['whatsapp', '79161234567@c.us'],
+  ['whatsapp', '123@lid'],
+  ['max', '-100123'],
+  ['max', '123'],
+  ['telegram', '-100123'],
+  ['telegram', '123'],
+] as const)('accepts the %s route chat id %s', (messengerId, chatId) => {
+  expect(parseRouteChatId(messengerId, chatId)).toBe(chatId);
+});
+
+test('decodes the route chat id of a url segment', () => {
+  expect(parseRouteChatId('whatsapp', '79161234567%40c.us')).toBe('79161234567@c.us');
+});
+
+test.each([
+  ['whatsapp', 'abc'],
+  ['whatsapp', '1@g.us'],
+  ['whatsapp', '123'],
+  ['max', '123@c.us'],
+  ['telegram', 'abc'],
+  ['max', ''],
+  ['telegram', '1\u0000'],
+  ['max', '1%2F2'],
+] as const)('rejects the %s route chat id %j', (messengerId, chatId) => {
+  expect(parseRouteChatId(messengerId, chatId)).toBeNull();
+});
+
+test('accepts a decoded chat id as is', () => {
+  expect(parseChatId('whatsapp', '79161234567@c.us')).toBe('79161234567@c.us');
+});
+
+test.each([
+  ['whatsapp', '79161234567%40c.us'],
+  ['max', '%31'],
+  ['max', '%'],
+] as const)('does not decode the %s chat id %j', (messengerId, chatId) => {
+  expect(parseChatId(messengerId, chatId)).toBeNull();
+});

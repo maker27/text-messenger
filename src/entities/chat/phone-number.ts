@@ -1,6 +1,8 @@
 import {
+  AsYouType,
   type PhoneNumber as ParsedPhoneNumber,
   parsePhoneNumberFromString,
+  parsePhoneNumberWithError,
 } from 'libphonenumber-js';
 import { z } from 'zod';
 
@@ -11,6 +13,7 @@ const DEFAULT_COUNTRY = 'RU';
 const NON_DIGIT_PATTERN = /\D/g;
 const FORMATTED_DIGITS_PATTERN = /^[\d\s().-]+$/;
 const INTERNATIONAL_PREFIX = '+';
+const MAX_PHONE_NUMBER_DIGITS = 15;
 
 const phoneNumberSchema = z
   .string()
@@ -48,4 +51,16 @@ export function parsePhoneNumber(
     return { ok: false, error: 'countryNotAllowed' };
   }
   return { ok: true, data: phoneNumber.data };
+}
+
+export function formatPhoneNumber(phoneNumber: PhoneNumber) {
+  return parsePhoneNumberWithError(`${INTERNATIONAL_PREFIX}${phoneNumber}`).formatInternational();
+}
+
+export function formatPhoneNumberInput(value: string) {
+  const digits = value.replace(NON_DIGIT_PATTERN, '');
+  if (digits.length > MAX_PHONE_NUMBER_DIGITS) {
+    return null;
+  }
+  return digits === '' ? '' : new AsYouType().input(`${INTERNATIONAL_PREFIX}${digits}`);
 }

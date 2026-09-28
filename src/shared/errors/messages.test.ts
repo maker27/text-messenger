@@ -1,7 +1,12 @@
 import { expect, test } from 'vitest';
 
-import { getGreenApiErrorMessage, getPhoneNumberErrorMessage } from './messages';
-import type { GreenApiError } from './model';
+import {
+  getGreenApiErrorMessage,
+  getLoginFieldErrorMessage,
+  getLoginReasonMessage,
+  getPhoneNumberErrorMessage,
+} from './messages';
+import type { GreenApiError, LoginField } from './model';
 
 const FAILURE_CODES = [
   'accountNotFound',
@@ -16,6 +21,13 @@ const FAILURE_CODES = [
   'upstream',
   'webhookConfigured',
 ] as const satisfies readonly Exclude<GreenApiError['code'], 'rateLimited'>[];
+
+const LOGIN_FIELDS = [
+  'apiTokenInstance',
+  'apiUrl',
+  'consent',
+  'idInstance',
+] as const satisfies readonly LoginField[];
 
 test.each(FAILURE_CODES)('has a message for %s', (code) => {
   expect(getGreenApiErrorMessage({ code }, 'MAX')).not.toBe('');
@@ -55,4 +67,21 @@ test('names the messenger when the country is not allowed', () => {
   expect(getPhoneNumberErrorMessage('countryNotAllowed', 'MAX')).toBe(
     'MAX не работает с номерами этой страны',
   );
+});
+
+test('asks to sign in again when the session expired', () => {
+  expect(getLoginReasonMessage('sessionExpired', 'MAX')).toBe('Сессия истекла. Войдите снова');
+});
+
+test('reuses the GREEN-API texts for stopped sessions', () => {
+  expect(getLoginReasonMessage('instanceTypeMismatch', 'Telegram')).toBe(
+    getGreenApiErrorMessage({ code: 'instanceTypeMismatch' }, 'Telegram'),
+  );
+  expect(getLoginReasonMessage('realModeDisabled', 'MAX')).toBe(
+    getGreenApiErrorMessage({ code: 'realModeDisabled' }, 'MAX'),
+  );
+});
+
+test.each(LOGIN_FIELDS)('has a message for the invalid %s field', (field) => {
+  expect(getLoginFieldErrorMessage(field)).not.toBe('');
 });

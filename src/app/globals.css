@@ -1,25 +1,202 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --danger: light-dark(#c62828, #ff6b6b);
+  color-scheme: light dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root,
+[data-messenger="max"] {
+  --accent: #007aff;
+  --accent-button: #006ee6;
+  --avatar-size: 48px;
+  --avatar-size-header: 48px;
+  --border: light-dark(#9da4ac4d, #ffffff29);
+  --bubble-in: light-dark(#ffffff, #232e3a);
+  --bubble-max-width: 480px;
+  --bubble-out: light-dark(#e9fdff, #5d6ae5);
+  --bubble-out-gradient: none;
+  --bubble-out-text: light-dark(#011c29, #ffffff);
+  --bubble-radius: 16px;
+  --bubble-radius-grouped: 6px;
+  --bubble-time-out: light-dark(#046690, #ffffff);
+  --composer-radius: 12px;
+  --focus: light-dark(#0062d1, #5c9dff);
+  --header-height: 64px;
+  --on-accent: #ffffff;
+  --on-row-active: var(--text);
+  --row-active: light-dark(#007aff14, #2c2d37);
+  --row-height: 64px;
+  --sidebar-width: 393px;
+  --sidebar-width-min: 260px;
+  --surface: light-dark(#ffffff, #17181c);
+  --surface-muted: light-dark(#f5f7fa, #25262d);
+  --text: light-dark(#060708, #ffffff);
+  --text-muted: light-dark(#060708ad, #ffffffcc);
+  --tick-read: light-dark(#007aff, #cfe8ff);
+  --wallpaper: light-dark(linear-gradient(135deg, #99d5d7, #80bcff), #141414);
+  --wallpaper-pattern: light-dark(#007aff4d, #505bc74d);
+}
+
+:root[data-theme="dark"] [data-messenger="max"] {
+  --bubble-out-gradient: linear-gradient(135deg, #8849b4, #735acd, #5d6ae5);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]):not([data-theme="dark"]) [data-messenger="max"] {
+    --bubble-out-gradient: linear-gradient(135deg, #8849b4, #735acd, #5d6ae5);
   }
 }
 
+[data-messenger="whatsapp"] {
+  --accent: light-dark(#1daa61, #21c063);
+  --accent-button: light-dark(#168049, #178645);
+  --avatar-size: 49px;
+  --avatar-size-header: 49px;
+  --border: light-dark(#0000001a, #ffffff1a);
+  --bubble-in: light-dark(#ffffff, #242626);
+  --bubble-max-width: 65%;
+  --bubble-out: light-dark(#d9fdd3, #144d37);
+  --bubble-out-gradient: none;
+  --bubble-out-text: var(--text);
+  --bubble-radius: 7.5px;
+  --bubble-radius-grouped: 7.5px;
+  --bubble-time-out: light-dark(#00000099, #ffffff99);
+  --composer-radius: 8px;
+  --focus: light-dark(#1daa61, #21c063);
+  --header-height: 60px;
+  --on-accent: #ffffff;
+  --on-row-active: var(--text);
+  --row-active: var(--surface-muted);
+  --row-height: 72px;
+  --sidebar-width: 30%;
+  --sidebar-width-min: 340px;
+  --surface: light-dark(#ffffff, #161717);
+  --surface-muted: light-dark(#f7f5f3, #161717);
+  --text: light-dark(#0a0a0a, #fafafa);
+  --text-muted: light-dark(#00000099, #ffffff99);
+  --tick-read: light-dark(#007bfc, #53bdeb);
+  --wallpaper: light-dark(#f5f1eb, #161717);
+  --wallpaper-pattern: light-dark(#eae0d3, #ffffff1a);
+}
+
+[data-messenger="telegram"] {
+  --accent: light-dark(#3390ec, #8774e1);
+  --accent-button: light-dark(#2973bd, #7363bf);
+  --avatar-size: 54px;
+  --avatar-size-header: 42px;
+  --border: light-dark(#dfe1e5, #0f0f0f);
+  --bubble-in: light-dark(#ffffff, #212121);
+  --bubble-max-width: 85%;
+  --bubble-out: light-dark(#e3fee0, #6f5bcf);
+  --bubble-out-gradient: none;
+  --bubble-out-text: light-dark(#000000, #ffffff);
+  --bubble-radius: 15px;
+  --bubble-radius-grouped: 5px;
+  --bubble-time-out: light-dark(#565a5e, #ffffff);
+  --composer-radius: 24px;
+  --focus: light-dark(#2a7bd1, #8774e1);
+  --header-height: 56px;
+  --on-accent: #ffffff;
+  --on-row-active: #ffffff;
+  --row-active: var(--accent);
+  --row-height: 72px;
+  --sidebar-width: 360px;
+  --sidebar-width-min: 320px;
+  --sidebar-width-max: 480px;
+  --surface: light-dark(#ffffff, #212121);
+  --surface-muted: light-dark(#f4f4f5, #181818);
+  --text: light-dark(#000000, #ffffff);
+  --text-muted: light-dark(#707579, #aaaaaa);
+  --tick-read: light-dark(#3390ec, #cfe8ff);
+  --wallpaper: light-dark(linear-gradient(135deg, #dbddbb, #6ba587, #d5d88d, #88b884), #0f0f0f);
+  --wallpaper-pattern: light-dark(#ffffff4d, #8774e133);
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-accent-button: var(--accent-button);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+  --color-bubble-in: var(--bubble-in);
+  --color-bubble-out: var(--bubble-out);
+  --color-bubble-out-text: var(--bubble-out-text);
+  --color-bubble-time-out: var(--bubble-time-out);
+  --color-focus: var(--focus);
+  --color-on-accent: var(--on-accent);
+  --color-on-row-active: var(--on-row-active);
+  --color-row-active: var(--row-active);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-tick-read: var(--tick-read);
+  --font-mono: var(--font-geist-mono);
+  --font-roboto: var(--font-roboto);
+  --font-sans: var(--font-geist-sans);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--surface);
+  color: var(--text);
+}
+
+[data-messenger="telegram"],
+[data-messenger="whatsapp"] {
+  font-family: var(--font-roboto), var(--font-sans);
+}
+
+[data-messenger="max"] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.chat-wallpaper {
+  background: var(--wallpaper);
+  position: relative;
+}
+
+.chat-wallpaper::before {
+  background-color: var(--wallpaper-pattern);
+  content: "";
+  inset: 0;
+  mask-position: 0 0;
+  mask-repeat: repeat;
+  position: absolute;
+}
+
+[data-messenger="max"] .chat-wallpaper::before {
+  mask-image: url("/wallpapers/max.svg");
+  mask-size: 180px;
+}
+
+[data-messenger="whatsapp"] .chat-wallpaper::before {
+  mask-image: url("/wallpapers/whatsapp.svg");
+  mask-size: 140px;
+}
+
+[data-messenger="telegram"] .chat-wallpaper::before {
+  mask-image: url("/wallpapers/telegram.svg");
+  mask-size: 160px;
+}
+
+[data-messenger="whatsapp"] .chat-empty-panel {
+  background: var(--surface-muted);
+}
+
+[data-messenger="whatsapp"] .chat-empty-panel::before {
+  content: none;
+}
+
+[data-messenger="whatsapp"] .chat-empty-panel .empty-chat-hint {
+  background: none;
+  border-radius: 0;
+  box-shadow: none;
 }

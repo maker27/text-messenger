@@ -2,6 +2,7 @@ import 'server-only';
 
 import { z } from 'zod';
 
+import type { MessengerId } from '@/entities/messenger/model';
 import type { GreenApiError } from '@/shared/errors/model';
 import type { Result } from '@/shared/errors/result';
 
@@ -61,3 +62,14 @@ export const checkWhatsappSchema = z
   .transform((response): Result<string, GreenApiError> =>
     response.existsWhatsapp ? { ok: true, data: response.chatId } : ACCOUNT_NOT_FOUND,
   );
+
+export function parseChatId(messengerId: MessengerId, value: string) {
+  const pattern = messengerId === 'whatsapp' ? WHATSAPP_CHAT_ID_PATTERN : NUMERIC_CHAT_ID_PATTERN;
+  return pattern.test(value) ? value : null;
+}
+
+// Next.js passes dynamic segments percent-encoded, so the WhatsApp `@` arrives as `%40`.
+// Malformed escapes never get here: the router rejects them before rendering the page.
+export function parseRouteChatId(messengerId: MessengerId, segment: string) {
+  return parseChatId(messengerId, decodeURIComponent(segment));
+}

@@ -26,3 +26,9 @@ export const MESSENGERS = {
     typeInstance: 'whatsapp',
   },
 } as const satisfies Record<MessengerId, MessengerConfig>;
+
+export const MESSENGER_ORDER = [
+  'max',
+  'whatsapp',
+  'telegram',
+] as const satisfies readonly MessengerId[];

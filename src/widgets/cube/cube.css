@@ -1,0 +1,103 @@
+.cube-scene {
+  background: light-dark(#c9ced6, #000000);
+  flex: 1;
+  overflow: hidden;
+  perspective: 150vw;
+  position: relative;
+}
+
+.cube {
+  inset: 0;
+  position: absolute;
+  transform: translateZ(-50vw) rotateY(var(--cube-angle));
+  transform-style: preserve-3d;
+  transition:
+    scale 300ms ease,
+    transform 600ms ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Uncut, the cube is wider than the scene mid-turn and its edges stay off screen. */
+.cube[data-rotating="true"] {
+  scale: 0.8 0.8 0.8;
+}
+
+.cube[data-active="max"] {
+  --cube-angle: 0deg;
+}
+
+.cube[data-active="whatsapp"] {
+  --cube-angle: -90deg;
+}
+
+.cube[data-active="telegram"] {
+  --cube-angle: -180deg;
+}
+
+.cube-face {
+  backface-visibility: hidden;
+  background: var(--surface);
+  color: var(--text);
+  inset: 0;
+  position: absolute;
+  transform: rotateY(var(--face-angle)) translateZ(50vw);
+  transition:
+    border-radius 300ms ease,
+    box-shadow 300ms ease;
+
+  &::after {
+    background: #000000;
+    border-radius: inherit;
+    content: "";
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transition: opacity 600ms ease;
+
+    @starting-style {
+      opacity: 0.5;
+    }
+  }
+
+  &[inert]::after {
+    opacity: 0.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: opacity 200ms ease;
+
+    @starting-style {
+      opacity: 0;
+    }
+  }
+}
+
+/* Chromium drops hit testing on a rotated face that is itself a scroll container. */
+.cube-face-content {
+  border-radius: inherit;
+  height: 100%;
+  overflow: auto;
+}
+
+.cube[data-rotating="true"] .cube-face {
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.cube-face[data-messenger="max"] {
+  --face-angle: 0deg;
+}
+
+.cube-face[data-messenger="whatsapp"] {
+  --face-angle: 90deg;
+}
+
+.cube-face[data-messenger="telegram"] {
+  --face-angle: 180deg;
+}

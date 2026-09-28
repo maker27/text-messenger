@@ -15,3 +15,7 @@ export type GreenApiError =
   { code: 'rateLimited'; retryAfter: number | null } | { code: GreenApiFailureCode };
 
 export type PhoneNumberErrorCode = 'countryNotAllowed' | 'invalid';
+
+export type LoginField = 'apiTokenInstance' | 'apiUrl' | 'consent' | 'idInstance';
+
+export type LoginReason = 'instanceTypeMismatch' | 'realModeDisabled' | 'sessionExpired';

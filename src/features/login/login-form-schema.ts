@@ -8,13 +8,17 @@ import {
   idInstanceSchema,
   type GreenApiCredentials,
 } from '@/server/green-api/credentials';
+import type { LoginField } from '@/shared/errors/model';
 import type { Result } from '@/shared/errors/result';
 
 const CONSENT_CHECKED_VALUE = 'on';
 
-const loginFieldSchema = z.enum(['apiTokenInstance', 'apiUrl', 'consent', 'idInstance']);
-
-type LoginField = z.infer<typeof loginFieldSchema>;
+const loginFieldSchema = z.enum([
+  'apiTokenInstance',
+  'apiUrl',
+  'consent',
+  'idInstance',
+]) satisfies z.ZodType<LoginField>;
 
 export interface LoginFormError {
   code: 'invalidInput';

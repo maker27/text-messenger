@@ -35,7 +35,7 @@ function createCookieStore() {
 }
 
 async function importSession() {
-  const { deleteSession, readSession, saveSession } = await import('./session');
+  const { deleteSession, peekSession, readSession, saveSession } = await import('./session');
   const { apiTokenInstanceSchema, idInstanceSchema } =
     await import('@/server/green-api/credentials');
   const { createApiUrlSchema } = await import('@/server/green-api/api-url');
@@ -53,7 +53,7 @@ async function importSession() {
     };
   }
 
-  return { createSessionInput, deleteSession, readSession, saveSession };
+  return { createSessionInput, deleteSession, peekSession, readSession, saveSession };
 }
 
 beforeEach(() => {
@@ -198,6 +198,28 @@ test('drops a session whose token is malformed', async () => {
     ok: false,
   });
   expect(cookies.values.has('tm_whatsapp')).toBe(false);
+});
+
+test('peeks a saved session without writing cookies', async () => {
+  const { createSessionInput, peekSession, saveSession } = await importSession();
+  const cookies = createCookieStore();
+  const saved = await saveSession(cookies, createSessionInput('demo', MOCK_ORIGIN));
+  const writeCount = cookies.writes.length;
+
+  await expect(peekSession(cookies, 'whatsapp')).resolves.toEqual({ data: saved, ok: true });
+  expect(cookies.writes).toHaveLength(writeCount);
+});
+
+test('peeks an invalid cookie without dropping it', async () => {
+  const { peekSession } = await importSession();
+  const cookies = createCookieStore();
+  cookies.values.set('tm_whatsapp', 'Fe26.2*1*tampered~2');
+
+  await expect(peekSession(cookies, 'whatsapp')).resolves.toEqual({
+    error: { code: 'unauthorized' },
+    ok: false,
+  });
+  expect(cookies.writes).toHaveLength(0);
 });
 
 test('reads a real session while real mode is enabled', async () => {
