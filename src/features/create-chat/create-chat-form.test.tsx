@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -63,10 +63,12 @@ test('opens the created chat', async () => {
 
   await submitPhone('+7 916 123-45-67');
 
+  await waitFor(() => {
+    expect(push).toHaveBeenCalledWith('/whatsapp/79161234567%40c.us');
+  });
   const formData = vi.mocked(createChat).mock.calls.at(-1)?.[2];
   expect(formData instanceof FormData && formData.get('phone')).toBe('+7 916 123 45 67');
   expect(store.getState().chats).toEqual([WHATSAPP_CHAT]);
-  expect(push).toHaveBeenCalledWith('/whatsapp/79161234567%40c.us');
   expect(screen.getByLabelText('Номер телефона')).toHaveValue('');
 });
 
@@ -129,7 +131,9 @@ test('links a rejected number to the phone field', async () => {
   await submitPhone('+7 916');
 
   const phoneField = screen.getByLabelText('Номер телефона');
-  expect(phoneField).toHaveAttribute('aria-invalid', 'true');
+  await waitFor(() => {
+    expect(phoneField).toHaveAttribute('aria-invalid', 'true');
+  });
   expect(phoneField).toHaveAccessibleDescription(
     'Введите номер телефона в международном формате, например +7 916 123-45-67',
   );
@@ -144,9 +148,11 @@ test('links a number without an account to the phone field', async () => {
 
   await submitPhone('+7 916 000-00-00');
 
-  expect(screen.getByLabelText('Номер телефона')).toHaveAccessibleDescription(
-    'Номер не зарегистрирован в WhatsApp',
-  );
+  await waitFor(() => {
+    expect(screen.getByLabelText('Номер телефона')).toHaveAccessibleDescription(
+      'Номер не зарегистрирован в WhatsApp',
+    );
+  });
 });
 
 test('announces a failed request', async () => {
@@ -155,7 +161,9 @@ test('announces a failed request', async () => {
 
   await submitPhone('+7 916 123-45-67');
 
-  expect(screen.getByRole('alert')).not.toBeEmptyDOMElement();
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).not.toBeEmptyDOMElement();
+  });
   expect(screen.getByLabelText('Номер телефона')).not.toHaveAttribute('aria-invalid');
 });
 

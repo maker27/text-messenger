@@ -35,7 +35,7 @@ function renderList(messages: ChatMessage[], onMessageRetry = vi.fn()) {
 
   render(
     <MessengerStoreContext value={store}>
-      <MessageList chatId={CHAT_ID} onMessageRetry={onMessageRetry} />
+      <MessageList chatId={CHAT_ID} isOffline={false} onMessageRetry={onMessageRetry} />
     </MessengerStoreContext>,
   );
 

@@ -26,10 +26,10 @@ export function HistoryError({ error, messengerId }: HistoryErrorProps) {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-start gap-4" role="alert">
+    <div className="flex flex-1 flex-col items-start gap-4 p-3" role="alert">
       <p>{getGreenApiErrorMessage(error, MESSENGERS[messengerId].title)}</p>
       <Button
-        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-accent outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus data-hovered:bg-surface-muted data-pending:opacity-60"
+        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-accent-button outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus data-hovered:bg-surface-muted data-pending:opacity-60"
         isPending={isPending}
         onPress={handleRetryPress}
       >

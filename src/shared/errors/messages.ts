@@ -52,4 +52,7 @@ export function getLoginReasonMessage(reason: LoginReason, messengerTitle: strin
     : getGreenApiErrorMessage({ code: reason }, messengerTitle);
 }
 
+export const CHATS_STORAGE_ERROR_MESSAGE =
+  'Не удалось сохранить список чатов в браузере — после перезагрузки он пропадёт';
+
 export const UNEXPECTED_ERROR_MESSAGE = 'Не удалось показать экран. Повторите попытку';

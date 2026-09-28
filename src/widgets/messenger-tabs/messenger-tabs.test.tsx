@@ -28,11 +28,22 @@ test('marks the active tab as the current page', () => {
 test('orders tabs as MAX, WhatsApp, Telegram', () => {
   renderTabs('max');
 
-  expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
-    'MAX',
-    'WhatsApp',
-    'Telegram',
-  ]);
+  expect(screen.getAllByRole('link')).toEqual(
+    ['MAX', 'WhatsApp', 'Telegram'].map((name) => screen.getByRole('link', { name })),
+  );
+});
+
+test('marks WhatsApp with a footnote sign outside its accessible name', () => {
+  renderTabs('max');
+
+  expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveTextContent('WhatsApp*');
+  expect(screen.getByRole('link', { name: 'MAX' })).toHaveTextContent(/^MAX$/);
+});
+
+test('keeps the footnote sign visible when the tab title is visually hidden', () => {
+  renderTabs('max');
+
+  expect(screen.getByText('*').closest('.sr-only')).toBeNull();
 });
 
 test('links each tab to its path', () => {

@@ -10,9 +10,15 @@ const MAX_MESSAGE_LENGTH = 10;
 const MISSING_LABEL_WARNING =
   'If you do not provide a visible label, you must specify an aria-label or aria-labelledby attribute for accessibility';
 
-function renderComposer() {
+function renderComposer({ isOffline = false } = {}) {
   const onMessageSubmit = vi.fn();
-  render(<Composer maxMessageLength={MAX_MESSAGE_LENGTH} onMessageSubmit={onMessageSubmit} />);
+  render(
+    <Composer
+      isOffline={isOffline}
+      maxMessageLength={MAX_MESSAGE_LENGTH}
+      onMessageSubmit={onMessageSubmit}
+    />,
+  );
   return { field: screen.getByLabelText('Сообщение'), onMessageSubmit, user: userEvent.setup() };
 }
 
@@ -86,11 +92,21 @@ test('blocks a message over the limit', async () => {
   expect(screen.getByRole('button', { name: 'Отправить' })).toBeDisabled();
 });
 
+test('blocks sending while offline and keeps the typed text', async () => {
+  const { field, onMessageSubmit, user } = renderComposer({ isOffline: true });
+
+  await user.type(field, 'Привет{Enter}');
+
+  expect(onMessageSubmit).not.toHaveBeenCalled();
+  expect(field).toHaveValue('Привет');
+  expect(screen.getByRole('button', { name: 'Отправить' })).toBeDisabled();
+});
+
 test('keeps the field label after being hidden and shown again', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   const renderInActivity = (mode: 'hidden' | 'visible') => (
     <Activity mode={mode}>
-      <Composer maxMessageLength={MAX_MESSAGE_LENGTH} onMessageSubmit={vi.fn()} />
+      <Composer isOffline={false} maxMessageLength={MAX_MESSAGE_LENGTH} onMessageSubmit={vi.fn()} />
     </Activity>
   );
 

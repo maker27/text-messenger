@@ -7,6 +7,7 @@ import {
   Dialog,
   Header,
   Input,
+  type Key,
   Menu,
   MenuItem,
   MenuSection,
@@ -33,6 +34,15 @@ import { useHotkeys } from './use-hotkeys';
 const ITEM_CLASS_NAME =
   'flex cursor-default flex-col rounded-md px-3 py-2 text-sm outline-none data-focused:bg-surface-muted';
 const SECTION_HEADER_CLASS_NAME = 'px-3 pt-2 pb-1 text-xs font-medium text-text-muted';
+const PHONE_QUERY_PATTERN = /^[\d\s()+-]*\d[\d\s()+-]*$/;
+const NON_DIGIT_PATTERN = /\D/g;
+
+function matchesPhoneDigits(textValue: string, inputValue: string) {
+  return (
+    PHONE_QUERY_PATTERN.test(inputValue) &&
+    textValue.replace(NON_DIGIT_PATTERN, '').includes(inputValue.replace(NON_DIGIT_PATTERN, ''))
+  );
+}
 
 interface CommandPaletteProps {
   activeMessenger: MessengerId | null;
@@ -46,6 +56,10 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
   const [isOpen, setIsOpen] = useState(false);
   const isPhoneFocusPendingRef = useRef(false);
   const { contains } = useFilter({ sensitivity: 'base' });
+  const filterItem = (textValue: string, inputValue: string, { key }: { key: Key }) =>
+    contains(textValue, inputValue) ||
+    matchesPhoneDigits(textValue, inputValue) ||
+    matchesPhoneDigits(String(key), inputValue);
   const messengers = [
     usePaletteMessenger('max'),
     usePaletteMessenger('whatsapp'),
@@ -106,7 +120,7 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
     >
       <Modal className="w-full max-w-lg overflow-hidden rounded-xl border border-border bg-surface shadow-xl">
         <Dialog aria-label="Палитра команд" className="flex flex-col outline-none">
-          <Autocomplete filter={contains}>
+          <Autocomplete filter={filterItem}>
             <SearchField aria-label="Поиск команды" autoFocus className="border-b border-border">
               <Input
                 className="w-full bg-transparent px-4 py-3 outline-none placeholder:text-text-muted"

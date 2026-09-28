@@ -19,6 +19,9 @@ const SECOND_CHAT: Chat = {
   title: '+7 916 765 43 21',
 };
 
+const CHATS_STORAGE_WARNING =
+  'Не удалось сохранить список чатов в браузере — после перезагрузки он пропадёт';
+
 function renderList(chats: Chat[]) {
   const store = createMessengerStore({
     idInstance: '1101000000000001',
@@ -94,4 +97,26 @@ test('shows an avatar for every chat', () => {
 
   const link = screen.getByRole('link', { name: FIRST_CHAT.title });
   expect(link.querySelector(`[title="${FIRST_CHAT.title}"]`)).toBeInTheDocument();
+});
+
+test('warns that chats will not survive a reload when storage fails', () => {
+  const store = renderList([FIRST_CHAT]);
+
+  act(() => {
+    store.setState({ chatsStorageError: { code: 'storageUnavailable' } });
+  });
+
+  expect(screen.getByRole('alert')).toHaveTextContent(CHATS_STORAGE_WARNING);
+  expect(screen.getByRole('link', { name: FIRST_CHAT.title })).toBeInTheDocument();
+});
+
+test('warns about unavailable storage before any chat exists', () => {
+  const store = renderList([]);
+
+  act(() => {
+    store.setState({ chatsStorageError: { code: 'storageUnavailable' } });
+  });
+
+  expect(screen.getByRole('alert')).toHaveTextContent(CHATS_STORAGE_WARNING);
+  expect(screen.getByText('Создайте чат по номеру телефона')).toBeInTheDocument();
 });

@@ -1,6 +1,6 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 
 import { createMessengerStore } from '@/entities/message/messenger-store';
 import { sendMessage } from '@/features/send-message/actions';
@@ -15,6 +15,10 @@ vi.mock('@/features/send-message/actions', async (importOriginal) => ({
 }));
 
 const CHAT_ID = '79161234567';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function renderConversation() {
   const store = createMessengerStore({
@@ -46,4 +50,21 @@ test('lists a sent message and lets the user retry it after a failure', async ()
 
   expect(await screen.findByRole('img', { name: 'Отправлено' })).toBeInTheDocument();
   expect(screen.getAllByRole('listitem')).toHaveLength(1);
+});
+
+test('blocks retrying a failed message while offline', async () => {
+  vi.mocked(sendMessage).mockResolvedValue({ error: { code: 'network' }, ok: false });
+  renderConversation();
+  const user = userEvent.setup();
+  await user.type(screen.getByLabelText('Сообщение'), 'Привет{Enter}');
+  const retryButton = await screen.findByRole('button', { name: 'Повторить' });
+
+  vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  act(() => {
+    window.dispatchEvent(new Event('offline'));
+  });
+  await user.click(retryButton);
+
+  expect(retryButton).toBeDisabled();
+  expect(sendMessage).toHaveBeenCalledOnce();
 });

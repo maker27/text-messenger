@@ -19,6 +19,7 @@ const TAB_PATHS = { max: '/max', telegram: '/telegram/79160000000', whatsapp: '/
 const TELEGRAM_CHATS: Chat[] = [
   { chatId: '79161111111', lastMessageAt: null, title: 'Анна' },
   { chatId: '79162222222', lastMessageAt: null, title: 'Борис' },
+  { chatId: '79001234567', lastMessageAt: null, title: '+7 900 123-45-67' },
 ];
 
 const { logout, push, refresh } = vi.hoisted(() => ({
@@ -119,6 +120,24 @@ test('filters the chats by the search text', async () => {
   expect(await screen.findByRole('menuitem', { name: 'Анна' })).toBeInTheDocument();
   expect(screen.queryByRole('menuitem', { name: 'Борис' })).toBeNull();
   expect(screen.queryByRole('menuitem', { name: 'MAX' })).toBeNull();
+});
+
+test('finds a chat by the digits of its phone number', async () => {
+  await openPalette();
+
+  await userEvent.keyboard('79001234567');
+
+  expect(await screen.findByRole('menuitem', { name: '+7 900 123-45-67' })).toBeInTheDocument();
+  expect(screen.queryByRole('menuitem', { name: 'Анна' })).toBeNull();
+});
+
+test('finds a named chat by the digits of its id', async () => {
+  await openPalette();
+
+  await userEvent.keyboard('+7 916 111');
+
+  expect(await screen.findByRole('menuitem', { name: 'Анна' })).toBeInTheDocument();
+  expect(screen.queryByRole('menuitem', { name: 'Борис' })).toBeNull();
 });
 
 test('shows an empty state when nothing matches', async () => {

@@ -18,18 +18,21 @@ export function ConnectionStatus({ messengerId }: ConnectionStatusProps) {
   const messengerTitle = MESSENGERS[messengerId].title;
 
   return (
-    <p className="text-sm text-text-muted" role="status">
-      {connection.status === 'connecting' && 'Подключение…'}
-      {connection.status === 'online' && 'В сети'}
+    <p className="flex gap-1 text-sm text-text-muted">
+      <span role="status">
+        {connection.status === 'connecting' && 'Подключение…'}
+        {connection.status === 'online' && 'В сети'}
+        {connection.status === 'reconnecting' && 'Переподключение…'}
+        {connection.status === 'stopped' &&
+          (connection.code === null
+            ? 'Получение сообщений остановлено'
+            : getGreenApiErrorMessage({ code: connection.code }, messengerTitle))}
+        {connection.status === 'unauthorized' &&
+          getLoginReasonMessage('sessionExpired', messengerTitle)}
+      </span>
       {connection.status === 'reconnecting' && (
         <ReconnectCountdown key={connection.retryAt} retryAt={connection.retryAt} />
       )}
-      {connection.status === 'stopped' &&
-        (connection.code === null
-          ? 'Получение сообщений остановлено'
-          : getGreenApiErrorMessage({ code: connection.code }, messengerTitle))}
-      {connection.status === 'unauthorized' &&
-        getLoginReasonMessage('sessionExpired', messengerTitle)}
     </p>
   );
 }
@@ -52,5 +55,5 @@ function ReconnectCountdown({ retryAt }: ReconnectCountdownProps) {
     };
   }, []);
 
-  return <>Переподключение через {seconds} с</>;
+  return <span aria-hidden>{seconds} с</span>;
 }

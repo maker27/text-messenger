@@ -4,6 +4,7 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 import boundaries from 'eslint-plugin-boundaries';
+import playwright from 'eslint-plugin-playwright';
 import tseslint from 'typescript-eslint';
 
 const eslintConfig = defineConfig([
@@ -32,6 +33,15 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    files: ['e2e/**', 'playwright.config.ts'],
+    ...playwright.configs['flat/recommended'],
+    rules: {
+      ...playwright.configs['flat/recommended'].rules,
+      // Playwright fixtures take a `use` callback parameter, which react-hooks mistakes for a hook call.
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
+  {
     files: ['src/**'],
     plugins: { boundaries },
     settings: {
@@ -43,6 +53,7 @@ const eslintConfig = defineConfig([
         { type: 'shared', pattern: 'src/shared' },
         { type: 'server', pattern: 'src/server/*' },
       ],
+      'boundaries/files': [{ category: 'proxy', pattern: 'src/proxy{,.test}.ts' }],
     },
     rules: {
       'boundaries/dependencies': [
@@ -87,6 +98,10 @@ const eslintConfig = defineConfig([
             {
               from: { element: { type: 'server' } },
               allow: { to: { element: { types: { anyOf: ['server', 'entities', 'shared'] } } } },
+            },
+            {
+              from: { file: { categories: 'proxy' } },
+              allow: { to: { file: { categories: 'proxy' } } },
             },
             {
               allow: { to: { module: { origin: 'external' } } },

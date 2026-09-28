@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist } from 'next/font/google';
 import { cookies } from 'next/headers';
 
 import { MessengerSessionProvider } from '@/features/messenger-session/messenger-session-provider';
@@ -12,11 +12,6 @@ import './globals.css';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['cyrillic', 'latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
   subsets: ['cyrillic', 'latin'],
 });
 
@@ -35,7 +30,7 @@ export default async function RootLayout({ children, max, telegram, whatsapp }: 
 
   return (
     <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} h-full antialiased`}
       data-theme={theme ?? undefined}
       lang="ru"
     >
@@ -55,7 +50,11 @@ export default async function RootLayout({ children, max, telegram, whatsapp }: 
               messengerId="telegram"
               session={telegramSession}
             >
-              <MessengerShell faces={{ max, telegram, whatsapp }} theme={theme}>
+              <MessengerShell
+                faces={{ max, telegram, whatsapp }}
+                isRealModeEnabled={env.REAL_MODE_ENABLED}
+                theme={theme}
+              >
                 {children}
               </MessengerShell>
             </MessengerSessionProvider>

@@ -6,6 +6,7 @@ import { ChatAvatar } from '@/entities/chat/chat-avatar';
 import { getChatPath } from '@/entities/chat/chat-path';
 import type { MessengerId } from '@/entities/messenger/model';
 import { useMessengerStore } from '@/features/messenger-session/messenger-session-provider';
+import { CHATS_STORAGE_ERROR_MESSAGE } from '@/shared/errors/messages';
 
 interface ChatListProps {
   messengerId: MessengerId;
@@ -15,13 +16,26 @@ export function ChatList({ messengerId }: ChatListProps) {
   const activeChatId = useMessengerStore((state) => state.activeChatId);
   const chats = useMessengerStore((state) => state.chats);
   const unreadByChat = useMessengerStore((state) => state.unreadByChat);
+  const chatsStorageError = useMessengerStore((state) => state.chatsStorageError);
+
+  const storageAlert = chatsStorageError !== null && (
+    <p className="px-3 py-2 text-sm text-danger" role="alert">
+      {CHATS_STORAGE_ERROR_MESSAGE}
+    </p>
+  );
 
   if (chats.length === 0) {
-    return <p className="text-sm text-text-muted">Создайте чат по номеру телефона</p>;
+    return (
+      <>
+        {storageAlert}
+        <p className="text-sm text-text-muted">Создайте чат по номеру телефона</p>
+      </>
+    );
   }
 
   return (
     <nav aria-label="Чаты">
+      {storageAlert}
       <ul className="flex flex-col">
         {chats.map(({ chatId, title }) => {
           const unreadCount = unreadByChat.get(chatId) ?? 0;

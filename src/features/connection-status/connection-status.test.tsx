@@ -49,23 +49,25 @@ test('shows the online state', () => {
   expect(screen.getByRole('status')).toHaveTextContent('В сети');
 });
 
-test('counts down to the next reconnect attempt', () => {
+test('counts down to the next reconnect attempt without re-announcing it', () => {
   const { setConnection } = renderStatus();
 
   act(() => {
     setConnection({ retryAt: NOW + 3000, status: 'reconnecting' });
   });
-  expect(screen.getByRole('status')).toHaveTextContent('Переподключение через 3 с');
+  expect(screen.getByRole('status')).toHaveTextContent(/^Переподключение…$/);
+  expect(screen.getByText('3 с')).toBeInTheDocument();
 
   act(() => {
     vi.advanceTimersByTime(1000);
   });
-  expect(screen.getByRole('status')).toHaveTextContent('Переподключение через 2 с');
+  expect(screen.getByRole('status')).toHaveTextContent(/^Переподключение…$/);
+  expect(screen.getByText('2 с')).toBeInTheDocument();
 
   act(() => {
     vi.advanceTimersByTime(5000);
   });
-  expect(screen.getByRole('status')).toHaveTextContent('Переподключение через 0 с');
+  expect(screen.getByText('0 с')).toBeInTheDocument();
 });
 
 test('restarts the countdown for the next attempt', () => {
@@ -81,7 +83,7 @@ test('restarts the countdown for the next attempt', () => {
     setConnection({ retryAt: NOW + 6000, status: 'reconnecting' });
   });
 
-  expect(screen.getByRole('status')).toHaveTextContent('Переподключение через 4 с');
+  expect(screen.getByText('4 с')).toBeInTheDocument();
 });
 
 test('explains a stream stopped by a webhook', () => {

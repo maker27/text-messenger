@@ -16,7 +16,7 @@
 :root,
 [data-messenger="max"] {
   --accent: #007aff;
-  --accent-button: #006ee6;
+  --accent-button: #0062d1;
   --avatar-size: 48px;
   --avatar-size-header: 48px;
   --border: light-dark(#9da4ac4d, #ffffff29);
@@ -44,6 +44,11 @@
   --tick-read: light-dark(#007aff, #cfe8ff);
   --wallpaper: light-dark(linear-gradient(135deg, #99d5d7, #80bcff), #141414);
   --wallpaper-pattern: light-dark(#007aff4d, #505bc74d);
+}
+
+/* Pages outside a messenger face use accent-button as text on dark surfaces too. */
+:root {
+  --accent-button: light-dark(#0062d1, #5c9dff);
 }
 
 :root[data-theme="dark"] [data-messenger="max"] {
@@ -90,7 +95,7 @@
 
 [data-messenger="telegram"] {
   --accent: light-dark(#3390ec, #8774e1);
-  --accent-button: light-dark(#2973bd, #7363bf);
+  --accent-button: light-dark(#256aad, #7363bf);
   --avatar-size: 54px;
   --avatar-size-header: 42px;
   --border: light-dark(#dfe1e5, #0f0f0f);
@@ -107,7 +112,8 @@
   --header-height: 56px;
   --on-accent: #ffffff;
   --on-row-active: #ffffff;
-  --row-active: var(--accent);
+  /* var(--accent) fails 4.5:1 against white row text. */
+  --row-active: light-dark(#125a9e, #4d3bb5);
   --row-height: 72px;
   --sidebar-width: 360px;
   --sidebar-width-min: 320px;
@@ -115,7 +121,7 @@
   --surface: light-dark(#ffffff, #212121);
   --surface-muted: light-dark(#f4f4f5, #181818);
   --text: light-dark(#000000, #ffffff);
-  --text-muted: light-dark(#707579, #aaaaaa);
+  --text-muted: light-dark(#565a5e, #aaaaaa);
   --tick-read: light-dark(#3390ec, #cfe8ff);
   --wallpaper: light-dark(linear-gradient(135deg, #dbddbb, #6ba587, #d5d88d, #88b884), #0f0f0f);
   --wallpaper-pattern: light-dark(#ffffff4d, #8774e133);
@@ -139,7 +145,6 @@
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-tick-read: var(--tick-read);
-  --font-mono: var(--font-geist-mono);
   --font-roboto: var(--font-roboto);
   --font-sans: var(--font-geist-sans);
 }
@@ -173,17 +178,17 @@ body {
 }
 
 [data-messenger="max"] .chat-wallpaper::before {
-  mask-image: url("/wallpapers/max.svg");
+  mask-image: url("./wallpapers/max.svg");
   mask-size: 180px;
 }
 
 [data-messenger="whatsapp"] .chat-wallpaper::before {
-  mask-image: url("/wallpapers/whatsapp.svg");
+  mask-image: url("./wallpapers/whatsapp.svg");
   mask-size: 140px;
 }
 
 [data-messenger="telegram"] .chat-wallpaper::before {
-  mask-image: url("/wallpapers/telegram.svg");
+  mask-image: url("./wallpapers/telegram.svg");
   mask-size: 160px;
 }
 

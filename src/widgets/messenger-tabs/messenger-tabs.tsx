@@ -42,7 +42,10 @@ export function MessengerTabs({
                 href={tabPaths[messengerId]}
               >
                 <MessengerLogo className="size-5 shrink-0 text-accent" />
-                <span className="sr-only sm:not-sr-only">{MESSENGERS[messengerId].title}</span>
+                <span>
+                  <span className="sr-only sm:not-sr-only">{MESSENGERS[messengerId].title}</span>
+                  {messengerId === 'whatsapp' && <span aria-hidden>*</span>}
+                </span>
                 {unreadCount > 0 && (
                   <span
                     aria-label={`${String(unreadCount)} непрочитанных`}

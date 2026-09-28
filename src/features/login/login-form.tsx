@@ -34,7 +34,7 @@ const API_URL_PLACEHOLDER = 'https://api.greenapi.com';
 const BUTTON_CLASS_NAME =
   'inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-medium outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus data-focus-visible:ring-offset-2 data-pending:opacity-60';
 
-const PRIMARY_BUTTON_CLASS_NAME = `${BUTTON_CLASS_NAME} bg-accent text-on-accent`;
+const PRIMARY_BUTTON_CLASS_NAME = `${BUTTON_CLASS_NAME} bg-accent-button text-on-accent`;
 
 const SECONDARY_BUTTON_CLASS_NAME = `${BUTTON_CLASS_NAME} border border-border data-hovered:bg-surface-muted`;
 

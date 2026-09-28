@@ -23,11 +23,17 @@ const STATUS_VIEWS: Record<MessageStatus, StatusView> = {
 
 interface MessageBubbleProps {
   groupPosition: MessageGroupPosition;
+  isOffline: boolean;
   message: ChatMessage;
   onMessageRetry: (localId: string) => void;
 }
 
-export function MessageBubble({ groupPosition, message, onMessageRetry }: MessageBubbleProps) {
+export function MessageBubble({
+  groupPosition,
+  isOffline,
+  message,
+  onMessageRetry,
+}: MessageBubbleProps) {
   const isOutgoing = message.direction === 'outgoing';
   const statusView = message.status === null ? null : STATUS_VIEWS[message.status];
   const timeClassName = isOutgoing ? 'text-bubble-time-out' : 'text-text-muted';
@@ -58,7 +64,8 @@ export function MessageBubble({ groupPosition, message, onMessageRetry }: Messag
           )}
           {message.status === 'failed' && (
             <Button
-              className="rounded-sm font-medium text-danger underline outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus"
+              className="rounded-sm font-medium text-danger underline outline-none data-disabled:opacity-60 data-focus-visible:ring-2 data-focus-visible:ring-focus"
+              isDisabled={isOffline}
               onPress={handleRetryPress}
             >
               Повторить

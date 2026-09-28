@@ -7,17 +7,18 @@ import { Button, Form, Text, TextArea, TextField } from 'react-aria-components';
 const COUNTER_THRESHOLD_RATIO = 0.9;
 
 interface ComposerProps {
+  isOffline: boolean;
   maxMessageLength: number;
   onMessageSubmit: (text: string) => void;
 }
 
-export function Composer({ maxMessageLength, onMessageSubmit }: ComposerProps) {
+export function Composer({ isOffline, maxMessageLength, onMessageSubmit }: ComposerProps) {
   const fieldId = useId();
   const labelId = useId();
   const [text, setText] = useState('');
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const isTooLong = text.length > maxMessageLength;
-  const canSubmit = text.trim() !== '' && !isTooLong;
+  const canSubmit = text.trim() !== '' && !isTooLong && !isOffline;
   const isCounterVisible = text.length >= maxMessageLength * COUNTER_THRESHOLD_RATIO;
 
   function submitMessage() {
