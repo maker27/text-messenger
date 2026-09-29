@@ -69,17 +69,26 @@ test('rejects an instance that sends notifications to a webhook', async () => {
   });
 });
 
-test.each([{ incomingWebhook: 'no' }, { outgoingWebhook: 'no' }])(
-  'rejects an instance with notifications disabled: %j',
-  async (settings) => {
-    const client = createScriptedClient([AUTHORIZED_STATE, createSettings(settings)]);
+test('rejects an instance with incoming notifications disabled', async () => {
+  const client = createScriptedClient([
+    AUTHORIZED_STATE,
+    createSettings({ incomingWebhook: 'no' }),
+  ]);
 
-    expect(await checkInstanceReadiness(client)).toEqual({
-      error: { code: 'notificationsDisabled' },
-      ok: false,
-    });
-  },
-);
+  expect(await checkInstanceReadiness(client)).toEqual({
+    error: { code: 'notificationsDisabled' },
+    ok: false,
+  });
+});
+
+test('accepts an instance without status notifications', async () => {
+  const client = createScriptedClient([
+    AUTHORIZED_STATE,
+    createSettings({ outgoingWebhook: 'no' }),
+  ]);
+
+  expect(await checkInstanceReadiness(client)).toEqual({ data: null, ok: true });
+});
 
 test('passes a transport error through', async () => {
   const client = createGreenApiClient(MESSENGERS.whatsapp, createTestCredentials(server.origin));

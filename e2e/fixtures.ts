@@ -17,8 +17,11 @@ function describeConsoleMessage(message: ConsoleMessage) {
   return `console.${message.type()}: ${message.text()}`;
 }
 
-function describeFailedResponse(response: Response) {
-  return `${String(response.status())} ${response.url()}`;
+// GREEN-API URLs carry apiTokenInstance in the path, so foreign URLs are reduced to their origin.
+function describeFailedResponse(response: Response, page: Page) {
+  const url = new URL(response.url());
+  const location = url.origin === new URL(page.url()).origin ? url.pathname : url.origin;
+  return `${String(response.status())} ${location}`;
 }
 
 export const test = base.extend<{
@@ -38,7 +41,7 @@ export const test = base.extend<{
     });
     page.on('response', (response) => {
       if (response.status() >= 400) {
-        responseFailures.push(describeFailedResponse(response));
+        responseFailures.push(describeFailedResponse(response, page));
       }
     });
 

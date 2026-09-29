@@ -54,7 +54,6 @@ test('reads the instance state and settings', async () => {
     ok: true,
     data: {
       isIncomingWebhookEnabled: true,
-      isOutgoingWebhookEnabled: true,
       isWebhookUrlSet: false,
     },
   });

@@ -11,12 +11,10 @@ export const stateInstanceSchema = z
 export const settingsSchema = z
   .object({
     incomingWebhook: webhookFlagSchema,
-    outgoingWebhook: webhookFlagSchema,
     webhookUrl: z.string(),
   })
-  .transform(({ incomingWebhook, outgoingWebhook, webhookUrl }) => ({
+  .transform(({ incomingWebhook, webhookUrl }) => ({
     isIncomingWebhookEnabled: incomingWebhook,
-    isOutgoingWebhookEnabled: outgoingWebhook,
     isWebhookUrlSet: webhookUrl !== '',
   }));
 

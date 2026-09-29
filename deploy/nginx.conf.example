@@ -1,4 +1,10 @@
-log_format no_ip '[$time_local] "$request_method $uri $server_protocol" $status $body_bytes_sent $request_time';
+# Chat routes carry the phone number or group id, so the log keeps only the messenger.
+map $uri $log_uri {
+    ~^(?<chat_route>/text-messenger/(?:max|whatsapp|telegram))/ $chat_route/:chatId;
+    default $uri;
+}
+
+log_format no_ip '[$time_local] "$request_method $log_uri $server_protocol" $status $body_bytes_sent $request_time';
 
 server {
     listen 443 ssl;

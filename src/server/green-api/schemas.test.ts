@@ -17,7 +17,6 @@ test('maps webhook settings to flags', () => {
     settingsSchema.parse({ incomingWebhook: 'yes', outgoingWebhook: 'no', webhookUrl: '' }),
   ).toEqual({
     isIncomingWebhookEnabled: true,
-    isOutgoingWebhookEnabled: false,
     isWebhookUrlSet: false,
   });
   expect(

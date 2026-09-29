@@ -31,6 +31,8 @@ const STREAM_EVENT_NAMES = [
 ] as const satisfies readonly (keyof typeof streamMessageSchemas)[];
 
 const NO_CHATS: Chat[] = [];
+const BASE_REOPEN_DELAY_MS = 1000;
+const MAX_REOPEN_DELAY_MS = 30_000;
 
 type MessengerStore = ReturnType<typeof createMessengerStore>;
 
@@ -41,6 +43,11 @@ interface MessengerSession {
   loginReason: LoginReason | null;
   session: SessionView | null;
   store: MessengerStore | null;
+}
+
+interface PendingReopen {
+  retryAt: number;
+  store: MessengerStore;
 }
 
 interface StoreEntry {
@@ -73,6 +80,8 @@ export function MessengerSessionProvider({
   const idInstance = isClient ? (session?.idInstance ?? null) : null;
   const [storeEntry, setStoreEntry] = useState<StoreEntry | null>(null);
   const [closedStore, setClosedStore] = useState<MessengerStore | null>(null);
+  const [pendingReopen, setPendingReopen] = useState<PendingReopen | null>(null);
+  const [reopenAttempt, setReopenAttempt] = useState(0);
   const [loginReason, setLoginReason] = useState<LoginReason | null>(null);
   const hasSession = session !== null;
   const [hadSession, setHadSession] = useState(hasSession);
@@ -86,6 +95,8 @@ export function MessengerSessionProvider({
             store: createMessengerStore({ idInstance, messengerId, storage: window.localStorage }),
           },
     );
+    setPendingReopen(null);
+    setReopenAttempt(0);
   }
 
   // The reason must survive refreshes that still carry the old session, so it resets only
@@ -100,13 +111,27 @@ export function MessengerSessionProvider({
 
   const store = storeEntry?.store ?? null;
   const streamUrl =
-    store !== null && store !== closedStore
+    store !== null && store !== closedStore && store !== pendingReopen?.store
       ? `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/api/${messengerId}/events`
       : null;
 
   useEffect(() => {
     store?.getState().setIsFaceActive(isFaceActive);
   }, [isFaceActive, store]);
+
+  useEffect(() => {
+    if (pendingReopen === null) {
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      setPendingReopen(null);
+    }, pendingReopen.retryAt - Date.now());
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [pendingReopen]);
 
   function stopStream(currentStore: MessengerStore, closeSource: () => void) {
     closeSource();
@@ -151,6 +176,10 @@ export function MessengerSessionProvider({
         } else {
           getState().setConnection(connection);
 
+          if (connection.status === 'online') {
+            setReopenAttempt(0);
+          }
+
           if (connection.status === 'stopped') {
             stopStream(store, closeSource);
           }
@@ -186,9 +215,13 @@ export function MessengerSessionProvider({
       return;
     }
 
+    // EventSource gives up after a non-2xx answer without telling 401 from 5xx, so the refresh
+    // ends an expired session and the reopen outlives a restart of the server.
     if (readyState === EventSource.CLOSED) {
-      store.getState().setConnection({ code: null, status: 'stopped' });
-      setClosedStore(store);
+      const retryAt = Date.now() + getReopenDelay(reopenAttempt);
+      store.getState().setConnection({ retryAt, status: 'reconnecting' });
+      setPendingReopen({ retryAt, store });
+      setReopenAttempt(reopenAttempt + 1);
       router.refresh();
     } else {
       store.getState().setConnection({ status: 'connecting' });
@@ -247,6 +280,10 @@ function useSessionStoreSnapshot<Selected>(
     () => (store === null ? fallback : selector(store.getState())),
     () => fallback,
   );
+}
+
+function getReopenDelay(attempt: number) {
+  return Math.min(MAX_REOPEN_DELAY_MS, BASE_REOPEN_DELAY_MS * 2 ** attempt);
 }
 
 function selectChats(state: ExtractState<MessengerStore>) {

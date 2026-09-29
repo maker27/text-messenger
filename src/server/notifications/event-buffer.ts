@@ -14,8 +14,8 @@ interface EventGapError {
 
 function getDeduplicationKey(event: NotificationEvent) {
   return event.type === 'message'
-    ? `message:${event.message.idMessage}`
-    : `status:${event.idMessage}:${event.status}`;
+    ? `message:${event.message.chatId}:${event.message.idMessage}`
+    : `status:${event.chatId}:${event.idMessage}:${event.status}`;
 }
 
 export function createEventBuffer(capacity: number) {

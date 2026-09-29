@@ -95,7 +95,7 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
         const status = mergeNullableStatus(
           mergeNullableStatus(
             mergeMessageStatus(local.status, 'sent'),
-            state.orphanStatuses.get(idMessage) ?? null,
+            state.orphanStatuses.get(getOrphanKey(local.chatId, idMessage)) ?? null,
           ),
           echo?.status ?? null,
         );
@@ -105,7 +105,7 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
 
         return {
           messagesByChat: new Map(state.messagesByChat).set(local.chatId, messages),
-          orphanStatuses: deleteOrphan(state.orphanStatuses, idMessage),
+          orphanStatuses: deleteOrphan(state.orphanStatuses, getOrphanKey(local.chatId, idMessage)),
         };
       });
     },
@@ -137,7 +137,7 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
             message.idMessage,
             mergeMessage(messages.get(message.idMessage), message, orphanStatuses),
           );
-          orphanStatuses = deleteOrphan(orphanStatuses, message.idMessage);
+          orphanStatuses = deleteOrphan(orphanStatuses, getOrphanKey(chatId, message.idMessage));
         }
 
         return {
@@ -155,7 +155,10 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
             state.messagesByChat,
             mergeMessage(current, message, state.orphanStatuses),
           ),
-          orphanStatuses: deleteOrphan(state.orphanStatuses, message.idMessage),
+          orphanStatuses: deleteOrphan(
+            state.orphanStatuses,
+            getOrphanKey(message.chatId, message.idMessage),
+          ),
         };
 
         if (current !== undefined) {
@@ -204,7 +207,13 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
         const current = state.messagesByChat.get(chatId)?.get(idMessage);
 
         if (current === undefined) {
-          return { orphanStatuses: addOrphan(state.orphanStatuses, idMessage, status) };
+          return {
+            orphanStatuses: addOrphan(
+              state.orphanStatuses,
+              getOrphanKey(chatId, idMessage),
+              status,
+            ),
+          };
         }
 
         return {
@@ -305,7 +314,7 @@ function mergeMessage(
 ): ChatMessage {
   const status = mergeNullableStatus(
     mergeNullableStatus(current?.status ?? null, next.status),
-    orphanStatuses.get(next.idMessage) ?? null,
+    orphanStatuses.get(getOrphanKey(next.chatId, next.idMessage)) ?? null,
   );
 
   return { ...(current ?? next), status };
@@ -336,35 +345,39 @@ function resetUnread(unreadByChat: Map<string, number>, chatId: string | null) {
   return nextUnreadByChat;
 }
 
+function getOrphanKey(chatId: string, idMessage: string) {
+  return `${chatId}:${idMessage}`;
+}
+
 function addOrphan(
   orphanStatuses: Map<string, MessageStatus>,
-  idMessage: string,
+  orphanKey: string,
   status: MessageStatus,
 ) {
   const nextOrphanStatuses = new Map(orphanStatuses);
-  nextOrphanStatuses.delete(idMessage);
+  nextOrphanStatuses.delete(orphanKey);
   nextOrphanStatuses.set(
-    idMessage,
-    mergeMessageStatus(orphanStatuses.get(idMessage) ?? null, status),
+    orphanKey,
+    mergeMessageStatus(orphanStatuses.get(orphanKey) ?? null, status),
   );
 
-  for (const oldestId of nextOrphanStatuses.keys()) {
+  for (const oldestKey of nextOrphanStatuses.keys()) {
     if (nextOrphanStatuses.size <= ORPHAN_STATUS_LIMIT) {
       break;
     }
 
-    nextOrphanStatuses.delete(oldestId);
+    nextOrphanStatuses.delete(oldestKey);
   }
 
   return nextOrphanStatuses;
 }
 
-function deleteOrphan(orphanStatuses: Map<string, MessageStatus>, idMessage: string) {
-  if (!orphanStatuses.has(idMessage)) {
+function deleteOrphan(orphanStatuses: Map<string, MessageStatus>, orphanKey: string) {
+  if (!orphanStatuses.has(orphanKey)) {
     return orphanStatuses;
   }
 
   const nextOrphanStatuses = new Map(orphanStatuses);
-  nextOrphanStatuses.delete(idMessage);
+  nextOrphanStatuses.delete(orphanKey);
   return nextOrphanStatuses;
 }

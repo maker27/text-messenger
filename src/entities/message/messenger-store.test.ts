@@ -96,10 +96,24 @@ test('evicts the oldest orphan statuses beyond the limit', () => {
     store.getState().updateStatus(CHAT_ID, `orphan-${String(index)}`, 'sent');
   }
 
-  const { orphanStatuses } = store.getState();
-  expect(orphanStatuses.size).toBe(ORPHAN_STATUS_LIMIT);
-  expect(orphanStatuses.has('orphan-0')).toBe(false);
-  expect(orphanStatuses.has(`orphan-${String(ORPHAN_STATUS_LIMIT)}`)).toBe(true);
+  store.getState().receiveMessage({ ...ECHO, idMessage: 'orphan-0' });
+  store.getState().receiveMessage({ ...ECHO, idMessage: `orphan-${String(ORPHAN_STATUS_LIMIT)}` });
+
+  expect(store.getState().orphanStatuses.size).toBe(ORPHAN_STATUS_LIMIT - 1);
+  expect(selectChatMessages(CHAT_ID)(store.getState())).toEqual([
+    expect.objectContaining({ idMessage: 'orphan-0', status: null }),
+    expect.objectContaining({ idMessage: `orphan-${String(ORPHAN_STATUS_LIMIT)}`, status: 'sent' }),
+  ]);
+});
+
+test('applies an orphan status only to the message of its own chat', () => {
+  const store = createStore();
+
+  store.getState().updateStatus(OTHER_CHAT_ID, ID_MESSAGE, 'read');
+  store.getState().receiveMessage(ECHO);
+
+  expect(selectChatMessages(CHAT_ID)(store.getState())).toEqual([ECHO]);
+  expect(store.getState().orphanStatuses.size).toBe(1);
 });
 
 test('applies an orphan status to a message received later', () => {

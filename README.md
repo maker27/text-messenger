@@ -2,17 +2,30 @@
 
 ![Демо: чаты в MAX, WhatsApp и Telegram, переключение вкладок и темы](.github/assets/demo.gif)
 
-Веб-клиент для отправки и получения текстовых сообщений через [GREEN-API](https://green-api.com/) в трёх мессенджерах: MAX, WhatsApp и Telegram. Постановка — [docs/test-assignment.md](docs/test-assignment.md).
+Веб-клиент для переписки через [GREEN-API](https://green-api.com/) в MAX, WhatsApp и Telegram. Постановка задачи — в [docs/test-assignment.md](docs/test-assignment.md).
 
-- Вход по `idInstance` и `apiTokenInstance`, у каждого мессенджера свой инстанс и свой вход.
-- Создание чата по номеру телефона, отправка сообщений (`SendMessage`), получение через HTTP API (`ReceiveNotification` + `DeleteNotification`).
-- Демо-режим работает с локальным моком GREEN-API и не требует аккаунта. Реальный режим включается переменной `REAL_MODE_ENABLED`.
+Что умеет:
 
-Стек: Next.js (App Router, standalone), React 19, TypeScript, XState, iron-session, pino.
+- входить по `idInstance` и `apiTokenInstance`, отдельно в каждый мессенджер;
+- создавать чат по номеру телефона;
+- отправлять и получать текстовые сообщения.
 
-## Архитектура
+Без аккаунта GREEN-API можно попробовать демо-режим: он работает с локальным моком.
 
-Браузер не обращается к GREEN-API напрямую: `apiTokenInstance` хранится только в зашифрованной httpOnly-cookie сессии и используется на сервере.
+Стек: Next.js (App Router), React 19, TypeScript, XState, iron-session, pino.
+
+## Как подключить свой инстанс
+
+1. Создайте инстанс в [личном кабинете GREEN-API](https://console.green-api.com/) и авторизуйте его.
+2. В настройках инстанса включите получение входящих сообщений и оставьте пустым URL webhook: приложение забирает уведомления само.
+3. Чтобы видеть статусы «доставлено» и «прочитано», включите ещё уведомления об исходящих сообщениях и их статусах.
+4. Запустите приложение с `REAL_MODE_ENABLED=true` и войдите с `idInstance`, `apiTokenInstance` и `apiUrl` из личного кабинета.
+
+Один инстанс — это один мессенджер. В MAX чат можно создать только с российским или белорусским номером: так работает GREEN-API.
+
+## Как это устроено
+
+Браузер не ходит в GREEN-API напрямую. Токен лежит в зашифрованной httpOnly-cookie, запросы делает сервер.
 
 ```mermaid
 flowchart LR
@@ -35,7 +48,7 @@ flowchart LR
 
 ### Поток уведомлений
 
-На каждую сессию мессенджера работает один poller. Каждое полученное уведомление удаляется из очереди до обработки, иначе GREEN-API отдаёт его повторно.
+Для каждой сессии работает один poller. Он забирает уведомление, сразу удаляет его из очереди и передаёт в браузер через SSE.
 
 ```mermaid
 sequenceDiagram
@@ -70,23 +83,23 @@ stateDiagram-v2
   stopped --> [*]
 ```
 
-Задержка в `backoff` растёт экспоненциально с джиттером до 30 секунд; при ответе 429 используется `Retry-After`.
+При ошибках пауза растёт до 30 секунд. Если GREEN-API ответил 429, poller ждёт столько, сколько указано в `Retry-After`.
 
 ## Локальный запуск
 
-Нужны Node.js 24 и pnpm (версия зафиксирована в `packageManager`, удобно через `corepack enable`).
+Понадобятся Node.js 24 и pnpm (проще всего через `corepack enable`).
 
 ```bash
 pnpm install
-cp .env.example .env   # заполнить SESSION_SECRET: openssl rand -base64 32
-pnpm mock              # мок GREEN-API на http://localhost:3100
+cp .env.example .env   # SESSION_SECRET: openssl rand -base64 32
+pnpm mock              # мок GREEN-API, http://localhost:3100
 pnpm dev               # в соседнем терминале, http://localhost:3000
 ```
 
-Запуск в Docker так же, как на сервере:
+Или в Docker, как на сервере:
 
 ```bash
-docker compose up -d --build --wait   # приложение на 127.0.0.1:${APP_PORT}
+docker compose up -d --build --wait
 ```
 
 ## Проверки
@@ -96,25 +109,24 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm knip
-pnpm build
+BASE_PATH=/text-messenger pnpm build
 pnpm test:e2e
 ```
 
-`pnpm test:e2e` сам поднимает мок и приложение. Чтобы прогнать e2e против уже запущенного стека (например, `docker compose`), задайте `E2E_BASE_URL`.
+E2E-тесты сами поднимают мок и приложение. Чтобы прогнать их против уже запущенного стека, задайте `E2E_BASE_URL`.
 
-```bash
-pnpm test:coverage      # покрытие, порог 90% строк для src/server и src/entities
-pnpm size               # бюджет клиентского JS, после pnpm build
-pnpm storybook          # компоненты в темах трёх мессенджеров, http://localhost:6006
-pnpm lighthouse         # после BASE_PATH=/text-messenger pnpm build
-pnpm test:visual        # визуальная регрессия против docker compose
-pnpm showcase           # запись демо и сборка GIF, после pnpm build
-```
+Дополнительно:
 
-- Storybook: в toolbar переключаются мессенджер и тема, вкладка Accessibility показывает проверки axe. Статическая сборка — `pnpm build-storybook` в `storybook-static/`.
-- Lighthouse проверяет страницы входа, чаты и `/privacy` в демо-режиме. Отчёты — в `.lighthouseci/`, в CI — artifact `lighthouse-report`. Нужен Chrome; другой браузер задаётся через `CHROME_PATH`.
-- Эталонные скриншоты снимаются в Docker-образе Playwright, поэтому `pnpm test:visual` работает только против запущенного `docker compose`. После намеренного изменения интерфейса эталоны обновляются командой `pnpm test:visual --update-snapshots`. Диффы упавших сравнений — в `test-results/`.
-- `pnpm showcase` пишет видео в `test-results/showcase/demo.webm` и собирает `.github/assets/demo.gif`. Нужен `ffmpeg`; запись идёт на приложении, которое поднимает сам Playwright, поэтому с заданным `E2E_BASE_URL` команда не запускается.
+| Команда              | Что делает                                                             |
+| -------------------- | ---------------------------------------------------------------------- |
+| `pnpm test:coverage` | Покрытие, порог 90% строк для `src/server` и `src/entities`            |
+| `pnpm size`          | Бюджет клиентского JS, после сборки                                    |
+| `pnpm storybook`     | Компоненты в темах трёх мессенджеров, http://localhost:6006            |
+| `pnpm lighthouse`    | Lighthouse в демо-режиме, после `BASE_PATH=/text-messenger pnpm build` |
+| `pnpm test:visual`   | Скриншотные тесты, только против `docker compose`                      |
+| `pnpm showcase`      | Записывает демо и собирает GIF, после сборки; нужен `ffmpeg`           |
+
+Эталонные скриншоты снимаются в Docker-образе Playwright. После намеренных изменений интерфейса обновите их: `pnpm test:visual --update-snapshots`.
 
 ## Переменные окружения
 
@@ -128,20 +140,20 @@ pnpm showcase           # запись демо и сборка GIF, после 
 | `BASE_PATH`          | build arg                         | Префикс путей приложения, например `/text-messenger`; задаётся при сборке | пусто                                                 |
 | `IMAGE_TAG`          | окружение `docker compose`        | Тег образов; `deploy.sh` подставляет sha коммита                          | `latest`                                              |
 
-При невалидных переменных сервер не стартует, а контейнер не проходит healthcheck.
+С невалидными переменными сервер не стартует.
 
 ## Деплой
 
-CI (`.github/workflows/ci.yml`) на каждый pull request и push в `main` гоняет проверки и e2e против `docker compose`. После зелёного CI на `main` workflow CD (`.github/workflows/cd.yml`) собирает образы `ghcr.io/maker27/text-messenger` и `ghcr.io/maker27/text-messenger-mock` с тегами sha и `latest`. Если в репозитории задана переменная `PUBLISH_IMAGES=true`, CD публикует образы в GHCR, копирует на сервер `docker-compose.yml` и `deploy/deploy.sh` и запускает деплой; без неё workflow ограничивается сборкой.
+CI проверяет каждый pull request и push в `main`. После зелёного CI на `main` CD собирает образы `ghcr.io/maker27/text-messenger` и `ghcr.io/maker27/text-messenger-mock`. Публикация и выкладка на сервер включаются переменной `PUBLISH_IMAGES=true`.
 
 ### Подготовка сервера
 
-1. Установить Docker с плагином Compose.
-2. Создать каталог деплоя (`DEPLOY_PATH`) и положить в него `.env` по образцу [.env.example](.env.example) с заполненным `SESSION_SECRET` и нужным `APP_PORT`.
-3. Добавить публичный ключ деплоя в `authorized_keys` пользователя, от которого идёт деплой; у пользователя должен быть доступ к Docker.
-4. Настроить nginx (см. ниже).
+1. Установите Docker с плагином Compose.
+2. Создайте каталог деплоя и положите туда `.env` по образцу [.env.example](.env.example).
+3. Добавьте публичный ключ деплоя пользователю с доступом к Docker.
+4. Настройте nginx по примеру [deploy/nginx.conf.example](deploy/nginx.conf.example). Для `/api/` в нём отключена буферизация, иначе сообщения через SSE приходят с задержкой.
 
-Сервер скачивает образы без логина. Новые пакеты GHCR создаются приватными, поэтому первый запуск CD с публикацией опубликует образы, но упадёт на шаге деплоя: сделайте оба пакета публичными (Package settings → Change visibility → Public) и перезапустите workflow CD.
+Новые пакеты в GHCR создаются приватными, а сервер скачивает образы без логина. Поэтому первый деплой упадёт: сделайте оба пакета публичными и перезапустите CD.
 
 ### Environment `production` в GitHub
 
@@ -157,18 +169,14 @@ CI (`.github/workflows/ci.yml`) на каждый pull request и push в `main`
 
 ### Откат
 
-`deploy.sh` перезапускает стек на образах нужного sha и до 60 секунд ждёт ответа `/api/health`. Образы берутся из локального хранилища Docker на сервере, а если их там нет — скачиваются из GHCR; на сервере они не собираются. Поэтому откат возможен, только пока образы предыдущего sha есть на сервере или опубликованы: не удаляйте их через `docker image prune -a`. Успешный sha записывается в `.deployed-sha`. Если новая версия не поднялась, скрипт возвращает предыдущий sha из `.deployed-sha`, проверяет его здоровье и завершается с ошибкой, так что workflow CD падает.
+`deploy.sh` поднимает стек на образах нужного коммита и ждёт ответа `/api/health` до 60 секунд. Если новая версия не поднялась, скрипт возвращает предыдущую и завершается с ошибкой.
 
-Ручной деплой или откат на любой опубликованный sha — из каталога деплоя:
+Откатиться можно на любой коммит, образы которого опубликованы или остались на сервере. Поэтому не чистите их через `docker image prune -a`.
 
 ```bash
 ./deploy.sh <полный-sha-коммита> /text-messenger
 ```
 
-### nginx
-
-Пример конфигурации — [deploy/nginx.conf.example](deploy/nginx.conf.example). Для `/api/` отключена буферизация (`proxy_buffering off`) и увеличен `proxy_read_timeout`: иначе nginx копит события SSE в буфере и сообщения приходят с задержкой, а долгие соединения обрываются. Заголовок `X-Forwarded-For` перезаписывается адресом клиента, чтобы лимит попыток входа нельзя было обойти подменой заголовка. В access-лог не пишутся IP и query-строка.
-
 ## Ограничения
 
-Приложение рассчитано на один экземпляр: poller-ы, буферы уведомлений и лимиты входа живут в памяти процесса. Горизонтальное масштабирование и несколько реплик не поддерживаются, после перезапуска клиенты переподключаются, а poller-ы стартуют заново.
+Приложение работает в одном экземпляре: poller-ы, буферы и лимиты входа хранятся в памяти процесса. После перезапуска клиенты переподключаются сами.

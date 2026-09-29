@@ -182,6 +182,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -330,6 +331,67 @@ test('refreshes the page data when the server rejects the stream', () => {
   source.fail(FakeEventSource.CLOSED);
 
   expect(refresh).toHaveBeenCalledOnce();
+});
+
+test('reopens a rejected stream with a growing delay', () => {
+  vi.useFakeTimers();
+  renderSessions();
+
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(999);
+  });
+  expect(getSource('max').readyState).toBe(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1);
+  });
+  expect(getSource('max').readyState).toBe(FakeEventSource.CONNECTING);
+
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1999);
+  });
+  expect(getSource('max').readyState).toBe(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1);
+  });
+  expect(getSource('max').readyState).toBe(FakeEventSource.CONNECTING);
+});
+
+test('resets the reopen delay once the stream is online', () => {
+  vi.useFakeTimers();
+  renderSessions();
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+
+  getSource('max').emit('connection', { status: 'online' });
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+
+  expect(getSource('max').readyState).toBe(FakeEventSource.CONNECTING);
+});
+
+test('starts a new session with the shortest reopen delay', () => {
+  vi.useFakeTimers();
+  const { rerenderSessions } = renderSessions();
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+  getSource('max').fail(FakeEventSource.CLOSED);
+
+  rerenderSessions(null);
+  rerenderSessions({ ...MAX_SESSION, idInstance: '3100000000000002' });
+  getSource('max').fail(FakeEventSource.CLOSED);
+  act(() => {
+    vi.advanceTimersByTime(1000);
+  });
+
+  expect(getSource('max').readyState).toBe(FakeEventSource.CONNECTING);
 });
 
 test('leaves the page data alone when the page unload closes the stream', () => {

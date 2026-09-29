@@ -35,6 +35,9 @@ export async function runReceiveCycle(
   if (!deletion.ok) {
     return { error: deletion.error, type: 'failed' };
   }
+  if (!deletion.data) {
+    return { error: { code: 'upstream' }, type: 'failed' };
+  }
   if (typeInstance !== null && typeInstance !== messenger.typeInstance) {
     return { type: 'mismatch' };
   }

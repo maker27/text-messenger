@@ -5,11 +5,13 @@ import type { MessageStatus } from '@/entities/message/model';
 import { createEventBuffer } from './event-buffer';
 
 const CAPACITY = 3;
+const CHAT_ID = '79001234567@c.us';
+const OTHER_CHAT_ID = '79001234568@c.us';
 
-function createMessageEvent(idMessage: string) {
+function createMessageEvent(idMessage: string, chatId = CHAT_ID) {
   return {
     message: {
-      chatId: '79001234567@c.us',
+      chatId,
       direction: 'incoming',
       idMessage,
       senderName: null,
@@ -21,8 +23,8 @@ function createMessageEvent(idMessage: string) {
   } as const;
 }
 
-function createStatusEvent(idMessage: string, status: MessageStatus) {
-  return { chatId: '79001234567@c.us', idMessage, status, type: 'status' } as const;
+function createStatusEvent(idMessage: string, status: MessageStatus, chatId = CHAT_ID) {
+  return { chatId, idMessage, status, type: 'status' } as const;
 }
 
 function appendMessages(buffer: ReturnType<typeof createEventBuffer>, count: number) {
@@ -60,6 +62,22 @@ test('drops a repeated status but keeps a new status of the same message', () =>
   expect(buffer.append(createStatusEvent('message-1', 'sent'))).toBeNull();
   expect(buffer.append(createStatusEvent('message-1', 'delivered'))).toEqual({
     event: createStatusEvent('message-1', 'delivered'),
+    seq: 2,
+  });
+});
+
+test('keeps messages with the same id from different chats', () => {
+  const buffer = createEventBuffer(CAPACITY);
+  buffer.append(createMessageEvent('message-1'));
+
+  expect(buffer.append(createMessageEvent('message-1', OTHER_CHAT_ID))).toMatchObject({ seq: 2 });
+});
+
+test('keeps statuses with the same message id from different chats', () => {
+  const buffer = createEventBuffer(CAPACITY);
+  buffer.append(createStatusEvent('message-1', 'sent'));
+
+  expect(buffer.append(createStatusEvent('message-1', 'sent', OTHER_CHAT_ID))).toMatchObject({
     seq: 2,
   });
 });

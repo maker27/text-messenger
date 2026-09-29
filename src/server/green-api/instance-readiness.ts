@@ -30,7 +30,7 @@ export async function checkInstanceReadiness(
   if (settings.data.isWebhookUrlSet) {
     return { error: { code: 'webhookConfigured' }, ok: false };
   }
-  if (!settings.data.isIncomingWebhookEnabled || !settings.data.isOutgoingWebhookEnabled) {
+  if (!settings.data.isIncomingWebhookEnabled) {
     return { error: { code: 'notificationsDisabled' }, ok: false };
   }
 

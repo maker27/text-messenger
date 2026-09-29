@@ -100,6 +100,15 @@ test('reports a failed deletion so the poller backs off', async () => {
   });
 });
 
+test('reports a notification the queue refused to delete', async () => {
+  const client = createClient(createNotification(), { data: false, ok: true });
+
+  expect(await runReceiveCycle(client, MESSENGERS.whatsapp, new AbortController().signal)).toEqual({
+    error: { code: 'upstream' },
+    type: 'failed',
+  });
+});
+
 test('reports a failed long poll', async () => {
   const client = createClient({ error: { code: 'unauthorized' }, ok: false });
 

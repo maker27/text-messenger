@@ -48,7 +48,6 @@ test.each(Object.values(MESSENGERS))(
     expect(unwrapResult(await client.getStateInstance())).toBe('authorized');
     expect(unwrapResult(await client.getSettings())).toEqual({
       isIncomingWebhookEnabled: true,
-      isOutgoingWebhookEnabled: true,
       isWebhookUrlSet: false,
     });
 
