@@ -1,5 +1,5 @@
-import { MessengerFace } from '@/widgets/messenger-face/messenger-face';
+import { EmptyChatPanel } from '@/widgets/messenger-face/empty-chat-panel';
 
 export default function Page() {
-  return <MessengerFace chat={null} messenger="whatsapp" />;
+  return <EmptyChatPanel />;
 }
