@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 
 import type { MessengerId } from '@/entities/messenger/model';
+import { clickLink } from '@/shared/testing/click-link';
 
 import { MessengerTabs } from './messenger-tabs';
 
@@ -23,6 +24,13 @@ test('marks the active tab as the current page', () => {
 
   expect(screen.getByRole('link', { name: 'WhatsApp' })).toHaveAttribute('aria-current', 'page');
   expect(screen.getByRole('link', { name: 'MAX' })).not.toHaveAttribute('aria-current');
+});
+
+test('keeps the current page in place when the active tab is clicked', () => {
+  renderTabs('whatsapp');
+
+  expect(clickLink(screen.getByRole('link', { name: 'WhatsApp' }))).toBe(true);
+  expect(clickLink(screen.getByRole('link', { name: 'MAX' }))).toBe(false);
 });
 
 test('orders tabs as MAX, WhatsApp, Telegram', () => {

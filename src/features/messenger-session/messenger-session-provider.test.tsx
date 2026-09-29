@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 
@@ -94,9 +94,13 @@ function createMessageFrame(text: string) {
 function Messages() {
   const messages = useMessengerStore(selectChatMessages(CHAT_ID));
   const isFaceActive = useMessengerStore((state) => state.isFaceActive);
+  const historyVersion = useMessengerStore((state) => state.historyVersion);
 
   return (
-    <ul aria-label={isFaceActive ? 'Активная грань' : 'Неактивная грань'}>
+    <ul
+      aria-label={isFaceActive ? 'Активная грань' : 'Неактивная грань'}
+      data-history-version={historyVersion}
+    >
       {messages.map(({ idMessage, text }) => (
         <li key={idMessage}>{text}</li>
       ))}
@@ -316,12 +320,17 @@ test('ignores the error of a stream the server closed after a stop frame', () =>
   expect(refresh).not.toHaveBeenCalled();
 });
 
-test('refreshes the page data on resync', () => {
+test('invalidates the loaded histories on resync', () => {
   renderSessions();
 
   getSource('max').emit('resync', {});
 
-  expect(refresh).toHaveBeenCalledOnce();
+  expect(within(getFace('MAX')).getByRole('list')).toHaveAttribute('data-history-version', '1');
+  expect(within(getFace('Telegram')).getByRole('list')).toHaveAttribute(
+    'data-history-version',
+    '0',
+  );
+  expect(refresh).not.toHaveBeenCalled();
 });
 
 test('refreshes the page data when the server rejects the stream', () => {

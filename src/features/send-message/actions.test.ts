@@ -55,7 +55,7 @@ test('sends the message with its spaces intact', async () => {
 
   const { idMessage } = unwrapResult(result);
   const { loadChatHistory } = await import('@/features/chat-history/server');
-  const history = await loadChatHistory('max', CHAT_ID);
+  const history = await loadChatHistory('max', CHAT_ID, new AbortController().signal);
   expect(history.ok && history.data).toContainEqual(
     expect.objectContaining({ idMessage, text: MESSAGE_TEXT }),
   );

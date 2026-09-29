@@ -76,7 +76,7 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
     },
     onTabSelect: (messengerId) => {
       setIsOpen(false);
-      router.push(tabPaths[messengerId]);
+      openPath(tabPaths[messengerId]);
     },
   });
 
@@ -99,6 +99,12 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
 
     isPhoneFocusPendingRef.current = false;
   }, [activeMessenger, isOpen, pathname, router]);
+
+  function openPath(path: string) {
+    if (path !== pathname) {
+      router.push(path);
+    }
+  }
 
   function runCommand(command: () => void) {
     setIsOpen(false);
@@ -142,7 +148,7 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
                     id={`messenger:${messengerId}`}
                     onAction={() => {
                       runCommand(() => {
-                        router.push(tabPaths[messengerId]);
+                        openPath(tabPaths[messengerId]);
                       });
                     }}
                   >
@@ -162,7 +168,7 @@ export function CommandPalette({ activeMessenger, tabPaths, onThemeChange }: Com
                         textValue={title}
                         onAction={() => {
                           runCommand(() => {
-                            router.push(getChatPath(messengerId, chatId));
+                            openPath(getChatPath(messengerId, chatId));
                           });
                         }}
                       >

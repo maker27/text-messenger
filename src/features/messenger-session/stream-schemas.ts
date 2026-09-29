@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { chatMessageSchema } from '@/entities/message/model';
+
 export const streamMessageSchemas = {
   connection: z.discriminatedUnion('status', [
     z.object({ status: z.enum(['online', 'unauthorized']) }),
@@ -9,15 +11,8 @@ export const streamMessageSchemas = {
       status: z.literal('stopped'),
     }),
   ]),
-  message: z
-    .object({
-      chatId: z.string().min(1),
-      direction: z.enum(['incoming', 'outgoing']),
-      idMessage: z.string().min(1),
-      senderName: z.string().nullable(),
-      sentAt: z.number(),
-      text: z.string(),
-    })
+  message: chatMessageSchema
+    .omit({ status: true })
     .transform((message) => ({ ...message, status: null })),
   resync: z.object({}),
   status: z.object({

@@ -77,7 +77,7 @@
   --header-height: 60px;
   --on-accent: #ffffff;
   --on-row-active: var(--text);
-  --row-active: var(--surface-muted);
+  --row-active: light-dark(#ebebeb, #2e2f2f);
   --row-height: 72px;
   --sidebar-width: 30%;
   --sidebar-width-min: 340px;

@@ -1,11 +1,17 @@
-export type MessageStatus = 'delivered' | 'failed' | 'pending' | 'read' | 'sent';
+import { z } from 'zod';
 
-export interface ChatMessage {
-  chatId: string;
-  direction: 'incoming' | 'outgoing';
-  idMessage: string;
-  senderName: string | null;
-  sentAt: number;
-  status: MessageStatus | null;
-  text: string;
-}
+const messageStatusSchema = z.enum(['delivered', 'failed', 'pending', 'read', 'sent']);
+
+export const chatMessageSchema = z.object({
+  chatId: z.string().min(1),
+  direction: z.enum(['incoming', 'outgoing']),
+  idMessage: z.string().min(1),
+  senderName: z.string().nullable(),
+  sentAt: z.number(),
+  status: messageStatusSchema.nullable(),
+  text: z.string(),
+});
+
+export type MessageStatus = z.infer<typeof messageStatusSchema>;
+
+export type ChatMessage = z.infer<typeof chatMessageSchema>;

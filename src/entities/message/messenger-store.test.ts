@@ -8,6 +8,7 @@ import {
   createMessengerStore,
   ORPHAN_STATUS_LIMIT,
   selectChatMessages,
+  selectHistoryState,
   selectUnreadTotal,
 } from './messenger-store';
 
@@ -78,6 +79,7 @@ test('merges an outgoing echo that arrived before the send confirmation', () => 
 
   expect(selectChatMessages(CHAT_ID)(store.getState())).toEqual([{ ...ECHO, status: 'read' }]);
   expect(selectUnreadTotal(store.getState())).toBe(0);
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('missing');
 });
 
 test('marks a pending message as failed', () => {
@@ -182,6 +184,7 @@ test('does not count messages of the active chat on the active face', () => {
   store.getState().receiveMessage(INCOMING);
 
   expect(selectUnreadTotal(store.getState())).toBe(0);
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('missing');
 });
 
 test('merges history without duplicates or status rollback', () => {
@@ -194,6 +197,23 @@ test('merges history without duplicates or status rollback', () => {
     INCOMING,
     { ...ECHO, status: 'read' },
   ]);
+});
+
+test('tracks whether the history of a chat is loaded and current', () => {
+  const store = createStore();
+
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('missing');
+
+  store.getState().hydrateHistory(CHAT_ID, [INCOMING]);
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('current');
+  expect(selectHistoryState(OTHER_CHAT_ID)(store.getState())).toBe('missing');
+
+  store.getState().invalidateHistory();
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('stale');
+  expect(selectChatMessages(CHAT_ID)(store.getState())).toEqual([INCOMING]);
+
+  store.getState().hydrateHistory(CHAT_ID, [INCOMING]);
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('current');
 });
 
 test('returns the same message list while the chat is unchanged', () => {
@@ -255,6 +275,7 @@ test('clears state and the storage key', () => {
   const store = createStore(storage);
 
   store.getState().receiveMessage(INCOMING);
+  store.getState().hydrateHistory(CHAT_ID, [INCOMING]);
   store.getState().setConnection({ status: 'online' });
   store.getState().clear();
 
@@ -262,4 +283,6 @@ test('clears state and the storage key', () => {
   expect(store.getState().chats).toEqual([]);
   expect(store.getState().connection).toEqual({ status: 'connecting' });
   expect(selectUnreadTotal(store.getState())).toBe(0);
+  expect(selectHistoryState(CHAT_ID)(store.getState())).toBe('missing');
+  expect(store.getState().isCleared).toBe(true);
 });

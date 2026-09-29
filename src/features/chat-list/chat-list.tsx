@@ -7,6 +7,7 @@ import { getChatPath } from '@/entities/chat/chat-path';
 import type { MessengerId } from '@/entities/messenger/model';
 import { useMessengerStore } from '@/features/messenger-session/messenger-session-provider';
 import { CHATS_STORAGE_ERROR_MESSAGE } from '@/shared/errors/messages';
+import { handleCurrentPageLinkClick } from '@/shared/navigation/current-page-link';
 
 interface ChatListProps {
   messengerId: MessengerId;
@@ -38,14 +39,16 @@ export function ChatList({ messengerId }: ChatListProps) {
       {storageAlert}
       <ul className="flex flex-col">
         {chats.map(({ chatId, title }) => {
+          const isActive = chatId === activeChatId;
           const unreadCount = unreadByChat.get(chatId) ?? 0;
 
           return (
             <li key={chatId}>
               <Link
-                aria-current={chatId === activeChatId ? 'page' : undefined}
+                aria-current={isActive ? 'page' : undefined}
                 className="flex h-[var(--row-height)] items-center gap-3 px-3 outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-focus aria-[current=page]:bg-row-active aria-[current=page]:text-on-row-active"
                 href={getChatPath(messengerId, chatId)}
+                onClick={isActive ? handleCurrentPageLinkClick : undefined}
               >
                 <ChatAvatar chatId={chatId} title={title} />
                 <span className="min-w-0 flex-1 truncate" title={title}>

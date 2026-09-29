@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { setTimeout } from 'node:timers/promises';
+
 import type { PhoneNumber } from '@/entities/chat/phone-number';
 import type { ChatMessage } from '@/entities/message/model';
 import type { MessengerConfig } from '@/entities/messenger/model';
@@ -14,6 +16,7 @@ import {
   notificationEnvelopeSchema,
   parseNotification,
 } from './notification';
+import { createRequestSpacer } from './request-spacer';
 import {
   chatHistorySchema,
   deleteNotificationSchema,
@@ -24,6 +27,9 @@ import {
 import { requestGreenApi } from './transport';
 
 const HISTORY_COUNT = 50;
+// GREEN-API answers getChatHistory with 429 above one request per second per instance.
+const HISTORY_INTERVAL_MS = 1000;
+const HISTORY_SPACER_MAX_KEYS = 10_000;
 const RECEIVE_TIMEOUT_SECONDS = 20;
 // Long polling holds the request for up to receiveTimeout, so the transport timeout must outlast it.
 const RECEIVE_REQUEST_TIMEOUT_MS = 25_000;
@@ -32,6 +38,12 @@ const CHAT_ID_SCHEMAS = {
   checkAccount: checkAccountSchema,
   checkWhatsapp: checkWhatsappSchema,
 } as const;
+
+const historySpacer = createRequestSpacer({
+  intervalMs: HISTORY_INTERVAL_MS,
+  maxKeys: HISTORY_SPACER_MAX_KEYS,
+  now: Date.now,
+});
 
 export function createGreenApiClient(messenger: MessengerConfig, credentials: GreenApiCredentials) {
   const baseRequest = { credentials, messengerId: messenger.id };
@@ -45,12 +57,25 @@ export function createGreenApiClient(messenger: MessengerConfig, credentials: Gr
         schema: deleteNotificationSchema,
       }),
 
-    getChatHistory: async (chatId: string): Promise<Result<ChatMessage[], GreenApiError>> => {
+    getChatHistory: async (
+      chatId: string,
+      signal: AbortSignal,
+    ): Promise<Result<ChatMessage[], GreenApiError>> => {
+      const spacerKey = `${messenger.id}:${credentials.idInstance}`;
+      // A slot is taken only when the request goes out, so an aborted wait holds no slot.
+      for (
+        let delayMs = historySpacer.tryAcquire(spacerKey);
+        delayMs > 0;
+        delayMs = historySpacer.tryAcquire(spacerKey)
+      ) {
+        await setTimeout(delayMs, undefined, { signal });
+      }
       const result = await requestGreenApi({
         ...baseRequest,
         body: { chatId, count: HISTORY_COUNT },
         method: 'getChatHistory',
         schema: chatHistorySchema,
+        signal,
       });
       return result.ok ? { ok: true, data: parseChatHistory(chatId, result.data) } : result;
     },

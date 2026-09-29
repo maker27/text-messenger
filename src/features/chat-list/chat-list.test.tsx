@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 import type { Chat } from '@/entities/chat/model';
 import { createMessengerStore } from '@/entities/message/messenger-store';
 import { MessengerStoreContext } from '@/features/messenger-session/messenger-session-provider';
+import { clickLink } from '@/shared/testing/click-link';
 import { MemoryStorage } from '@/shared/testing/memory-storage';
 
 import { ChatList } from './chat-list';
@@ -71,6 +72,17 @@ test('marks the active chat as the current page', () => {
     'page',
   );
   expect(screen.getByRole('link', { name: FIRST_CHAT.title })).not.toHaveAttribute('aria-current');
+});
+
+test('keeps the open chat in place when its link is clicked again', () => {
+  const store = renderList([FIRST_CHAT, SECOND_CHAT]);
+
+  act(() => {
+    store.getState().setActiveChat(FIRST_CHAT.chatId);
+  });
+
+  expect(clickLink(screen.getByRole('link', { name: FIRST_CHAT.title }))).toBe(true);
+  expect(clickLink(screen.getByRole('link', { name: SECOND_CHAT.title }))).toBe(false);
 });
 
 test('shows the unread count of a chat', () => {

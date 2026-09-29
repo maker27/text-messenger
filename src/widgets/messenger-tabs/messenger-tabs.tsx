@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { MESSENGER_ORDER, MESSENGERS } from '@/entities/messenger/config';
 import type { MessengerId } from '@/entities/messenger/model';
+import { handleCurrentPageLinkClick } from '@/shared/navigation/current-page-link';
 
 import { MaxLogo } from './logos/max-logo';
 import { TelegramLogo } from './logos/telegram-logo';
@@ -40,6 +41,7 @@ export function MessengerTabs({
                 aria-current={isActive ? 'page' : undefined}
                 className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-3 text-sm font-medium text-text-muted outline-none hover:text-text focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset aria-[current=page]:border-accent aria-[current=page]:text-text"
                 href={tabPaths[messengerId]}
+                onClick={isActive ? handleCurrentPageLinkClick : undefined}
               >
                 <MessengerLogo className="size-5 shrink-0 text-accent" />
                 <span>

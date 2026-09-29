@@ -1,8 +1,6 @@
 'use client';
 
-import { LoaderCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useEffectEvent, useRef, useTransition } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import { Button } from 'react-aria-components';
 
 import { MESSENGERS } from '@/entities/messenger/config';
@@ -12,23 +10,16 @@ import { getGreenApiErrorMessage } from '@/shared/errors/messages';
 import type { GreenApiError } from '@/shared/errors/model';
 
 interface HistoryErrorProps {
+  className: string;
   error: GreenApiError;
   messengerId: MessengerId;
+  onRetry: () => void;
 }
 
-export function HistoryError({ error, messengerId }: HistoryErrorProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+export function HistoryError({ className, error, messengerId, onRetry }: HistoryErrorProps) {
   const isConnectionOnline = useMessengerStore((state) => state.connection.status === 'online');
   const wasConnectionOnlineRef = useRef(isConnectionOnline);
-
-  function refreshHistory() {
-    startTransition(() => {
-      router.refresh();
-    });
-  }
-
-  const handleConnectionRestore = useEffectEvent(refreshHistory);
+  const handleConnectionRestore = useEffectEvent(onRetry);
 
   useEffect(() => {
     if (isConnectionOnline && !wasConnectionOnlineRef.current) {
@@ -37,19 +28,13 @@ export function HistoryError({ error, messengerId }: HistoryErrorProps) {
     wasConnectionOnlineRef.current = isConnectionOnline;
   }, [isConnectionOnline]);
 
-  function handleRetryPress() {
-    refreshHistory();
-  }
-
   return (
-    <div className="flex flex-1 flex-col items-start gap-4 p-3" role="alert">
+    <div className={`flex flex-col items-start gap-4 p-3 ${className}`} role="alert">
       <p>{getGreenApiErrorMessage(error, MESSENGERS[messengerId].title)}</p>
       <Button
-        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-accent-text outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus data-hovered:bg-surface-muted data-pending:opacity-60"
-        isPending={isPending}
-        onPress={handleRetryPress}
+        className="inline-flex min-h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-medium text-accent-text outline-none data-focus-visible:ring-2 data-focus-visible:ring-focus data-hovered:bg-surface-muted"
+        onPress={onRetry}
       >
-        {isPending && <LoaderCircle aria-hidden className="size-4 animate-spin" />}
         Повторить
       </Button>
     </div>

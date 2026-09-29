@@ -63,7 +63,7 @@ test('loads the chat history of the session instance', async () => {
   );
   const loadChatHistory = await importLoadChatHistory();
 
-  const history = await loadChatHistory('max', CHAT_ID);
+  const history = await loadChatHistory('max', CHAT_ID, new AbortController().signal);
 
   expect(history.ok && history.data).toContainEqual(
     expect.objectContaining({ chatId: CHAT_ID, direction: 'outgoing', text: MESSAGE_TEXT }),
@@ -73,7 +73,7 @@ test('loads the chat history of the session instance', async () => {
 test('refuses to load the history without a session', async () => {
   const loadChatHistory = await importLoadChatHistory();
 
-  expect(await loadChatHistory('max', CHAT_ID)).toEqual({
+  expect(await loadChatHistory('max', CHAT_ID, new AbortController().signal)).toEqual({
     error: { code: 'unauthorized' },
     ok: false,
   });
@@ -92,7 +92,7 @@ test('reports a rate limited history request', async () => {
     await signInToDemo();
     const loadChatHistory = await importLoadChatHistory();
 
-    expect(await loadChatHistory('max', CHAT_ID)).toEqual({
+    expect(await loadChatHistory('max', CHAT_ID, new AbortController().signal)).toEqual({
       error: { code: 'rateLimited', retryAfter: RETRY_AFTER_SECONDS },
       ok: false,
     });

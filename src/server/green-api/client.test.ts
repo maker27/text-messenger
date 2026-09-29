@@ -16,6 +16,10 @@ import {
 
 const INSTANCE_PATH = `/waInstance${TEST_ID_INSTANCE}`;
 const CHAT_ID = '79161234567@c.us';
+const SPACED_ID_INSTANCE = '1101000002';
+const ABORTED_ID_INSTANCE = '1101000003';
+const RELEASED_ID_INSTANCE = '1101000004';
+const HISTORY_INTERVAL_MS = 1000;
 const PHONE_NUMBER = unwrapResult(parsePhoneNumber('+7 916 123-45-67', null));
 
 let server: Awaited<ReturnType<typeof startTestServer>>;
@@ -108,7 +112,9 @@ test('requests the latest chat history', async () => {
     status: 200,
   });
 
-  const history = unwrapResult(await createClient().getChatHistory(CHAT_ID));
+  const history = unwrapResult(
+    await createClient().getChatHistory(CHAT_ID, new AbortController().signal),
+  );
 
   expect(history).toEqual([
     {
@@ -122,6 +128,61 @@ test('requests the latest chat history', async () => {
     },
   ]);
   expect(getLastRequest()?.body).toBe(`{"chatId":"${CHAT_ID}","count":50}`);
+});
+
+test('spaces chat history requests of one instance by the API rate limit', async () => {
+  server.setReply({ body: '[]', status: 200 });
+  const client = createGreenApiClient(
+    MESSENGERS.whatsapp,
+    createTestCredentials(server.origin, SPACED_ID_INSTANCE),
+  );
+  const startedAt = performance.now();
+
+  const { signal } = new AbortController();
+
+  await Promise.all([
+    client.getChatHistory(CHAT_ID, signal),
+    client.getChatHistory(CHAT_ID, signal),
+  ]);
+
+  expect(server.requests).toHaveLength(2);
+  expect(performance.now() - startedAt).toBeGreaterThanOrEqual(HISTORY_INTERVAL_MS);
+});
+
+test('drops a spaced chat history request aborted while it waits', async () => {
+  server.setReply({ body: '[]', status: 200 });
+  const client = createGreenApiClient(
+    MESSENGERS.whatsapp,
+    createTestCredentials(server.origin, ABORTED_ID_INSTANCE),
+  );
+  const controller = new AbortController();
+
+  await client.getChatHistory(CHAT_ID, controller.signal);
+  const waitingRequest = client.getChatHistory(CHAT_ID, controller.signal);
+  controller.abort();
+
+  await expect(waitingRequest).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
+  expect(server.requests).toHaveLength(1);
+});
+
+test('does not hold a slot for a chat history request aborted while it waits', async () => {
+  server.setReply({ body: '[]', status: 200 });
+  const client = createGreenApiClient(
+    MESSENGERS.whatsapp,
+    createTestCredentials(server.origin, RELEASED_ID_INSTANCE),
+  );
+  const { signal } = new AbortController();
+  const controller = new AbortController();
+
+  await client.getChatHistory(CHAT_ID, signal);
+  const startedAt = performance.now();
+  const abortedRequest = client.getChatHistory(CHAT_ID, controller.signal);
+  controller.abort();
+  await expect(abortedRequest).rejects.toThrow(expect.objectContaining({ name: 'AbortError' }));
+  await client.getChatHistory(CHAT_ID, signal);
+
+  expect(server.requests).toHaveLength(2);
+  expect(performance.now() - startedAt).toBeLessThan(2 * HISTORY_INTERVAL_MS);
 });
 
 test('reports an empty notification queue as null', async () => {

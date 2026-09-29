@@ -196,7 +196,7 @@ export function MessengerSessionProvider({
       }
       case 'resync': {
         if (streamMessageSchemas.resync.safeParse(data).success) {
-          router.refresh();
+          getState().invalidateHistory();
         }
         return;
       }

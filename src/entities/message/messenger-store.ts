@@ -30,6 +30,9 @@ interface MessengerData {
   chats: Chat[];
   chatsStorageError: { code: 'storageUnavailable' } | null;
   connection: ConnectionView;
+  historyVersion: number;
+  historyVersionByChat: Map<string, number>;
+  isCleared: boolean;
   isFaceActive: boolean;
   messagesByChat: Map<string, ChatMessages>;
   orphanStatuses: Map<string, MessageStatus>;
@@ -43,6 +46,7 @@ interface MessengerState extends MessengerData {
   confirmMessage: (localId: string, idMessage: string) => void;
   failMessage: (localId: string) => void;
   hydrateHistory: (chatId: string, messages: ChatMessage[]) => void;
+  invalidateHistory: () => void;
   receiveMessage: (message: ChatMessage) => void;
   setActiveChat: (chatId: string | null) => void;
   setConnection: (connection: ConnectionView) => void;
@@ -78,7 +82,7 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
     },
 
     clear: () => {
-      set(createInitialData([], null));
+      set({ ...createInitialData([], null), isCleared: true });
       storage.removeItem(storageKey);
     },
 
@@ -141,10 +145,18 @@ export function createMessengerStore({ idInstance, messengerId, storage }: Messe
         }
 
         return {
+          historyVersionByChat: new Map(state.historyVersionByChat).set(
+            chatId,
+            state.historyVersion,
+          ),
           messagesByChat: new Map(state.messagesByChat).set(chatId, messages),
           orphanStatuses,
         };
       });
+    },
+
+    invalidateHistory: () => {
+      set(({ historyVersion }) => ({ historyVersion: historyVersion + 1 }));
     },
 
     receiveMessage: (message) => {
@@ -252,6 +264,18 @@ export function selectUnreadTotal(state: MessengerState) {
   return total;
 }
 
+export function selectHistoryState(chatId: string) {
+  return (state: MessengerState) => {
+    const version = state.historyVersionByChat.get(chatId);
+
+    if (version === undefined) {
+      return 'missing';
+    }
+
+    return version === state.historyVersion ? 'current' : 'stale';
+  };
+}
+
 const sortedMessagesCache = new WeakMap<ChatMessages, ChatMessage[]>();
 
 export function selectChatMessages(chatId: string) {
@@ -283,6 +307,9 @@ function createInitialData(
     chats,
     chatsStorageError,
     connection: { status: 'connecting' },
+    historyVersion: 0,
+    historyVersionByChat: new Map(),
+    isCleared: false,
     isFaceActive: false,
     messagesByChat: new Map(),
     orphanStatuses: new Map(),

@@ -167,6 +167,17 @@ test('switches to the last path of a messenger', async () => {
   expect(push).toHaveBeenCalledExactlyOnceWith('/telegram/79160000000');
 });
 
+test('stays on the current page when its messenger is selected', async () => {
+  await openPalette();
+
+  await userEvent.click(screen.getByRole('menuitem', { name: 'MAX' }));
+
+  expect(push).not.toHaveBeenCalled();
+  await waitFor(() => {
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
 test('offers to log out only of messengers with a session', async () => {
   await openPalette();
 

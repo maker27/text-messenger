@@ -79,7 +79,7 @@ test.each(Object.values(MESSENGERS))(
     expect(replies).toEqual(['Эхо: Привет']);
     expect(typeInstances).toEqual(new Set([messenger.typeInstance]));
 
-    const history = unwrapResult(await client.getChatHistory(chatId));
+    const history = unwrapResult(await client.getChatHistory(chatId, new AbortController().signal));
     expect(history).toHaveLength(2);
     expect(history).toEqual(
       expect.arrayContaining([
