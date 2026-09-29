@@ -82,6 +82,14 @@ test('orders messages by the time they were sent', () => {
   ]);
 });
 
+test('lets the keyboard reach the message history to scroll it', async () => {
+  renderList([createMessage({ idMessage: 'first' })]);
+
+  await userEvent.setup().tab();
+
+  expect(screen.getByRole('region', { name: 'История сообщений' })).toHaveFocus();
+});
+
 test('announces the first message of an empty chat politely', () => {
   const store = renderList([]);
   const liveRegion = screen.getByText('Сообщений пока нет').closest('[aria-live="polite"]');

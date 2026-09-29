@@ -55,7 +55,7 @@ export function ChatList({ messengerId }: ChatListProps) {
                   <>
                     <span
                       aria-hidden
-                      className="rounded-full bg-accent px-2 text-xs leading-5 text-on-accent"
+                      className="rounded-full bg-accent-button px-2 text-xs leading-5 text-on-accent"
                     >
                       {unreadCount}
                     </span>

@@ -1,0 +1,7 @@
+[
+  {
+    "name": "Client JS",
+    "path": ".next/static/**/*.js",
+    "limit": "385 kB"
+  }
+]

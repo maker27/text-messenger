@@ -63,11 +63,20 @@ test('counts down to the next reconnect attempt without re-announcing it', () =>
   });
   expect(screen.getByRole('status')).toHaveTextContent(/^Переподключение…$/);
   expect(screen.getByText('2 с')).toBeInTheDocument();
+});
+
+test('reports a connection check once the reconnect attempt is due', () => {
+  const { setConnection } = renderStatus();
 
   act(() => {
-    vi.advanceTimersByTime(5000);
+    setConnection({ retryAt: NOW + 2000, status: 'reconnecting' });
   });
-  expect(screen.getByText('0 с')).toBeInTheDocument();
+  act(() => {
+    vi.advanceTimersByTime(2000);
+  });
+
+  expect(screen.getByRole('status')).toHaveTextContent(/^Проверка связи…$/);
+  expect(screen.queryByText('0 с')).not.toBeInTheDocument();
 });
 
 test('restarts the countdown for the next attempt', () => {

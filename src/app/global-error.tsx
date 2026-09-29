@@ -17,7 +17,7 @@ export default function GlobalError({ retry }: GlobalErrorProps) {
           <h1 className="text-lg font-semibold">Что-то пошло не так</h1>
           <p>{UNEXPECTED_ERROR_MESSAGE}</p>
           <button
-            className="rounded-md border border-border px-4 py-2 font-medium text-accent-button outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-focus"
+            className="rounded-md border border-border px-4 py-2 font-medium text-accent-text outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-focus"
             type="button"
             onClick={retry}
           >

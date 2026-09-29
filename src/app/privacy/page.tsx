@@ -43,7 +43,7 @@ export default function PrivacyPage() {
         </p>
       </section>
       <Link
-        className="rounded-md font-medium text-accent-button outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        className="rounded-md font-medium text-accent-text outline-none focus-visible:ring-2 focus-visible:ring-focus"
         href="/"
       >
         Назад

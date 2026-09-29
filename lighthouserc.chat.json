@@ -1,0 +1,33 @@
+{
+  "ci": {
+    "collect": {
+      "numberOfRuns": 3,
+      "puppeteerScript": "lighthouse/sign-in.cjs",
+      "settings": {
+        "disableStorageReset": true,
+        "preset": "desktop"
+      },
+      "startServerCommand": "node lighthouse/serve.mjs",
+      "startServerReadyPattern": "Ready in",
+      "url": [
+        "http://localhost:3200/text-messenger/max/79001234567",
+        "http://localhost:3200/text-messenger/whatsapp/79001234567%40c.us",
+        "http://localhost:3200/text-messenger/telegram/79001234567"
+      ]
+    },
+    "assert": {
+      "assertions": {
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
+        "categories:best-practices": ["error", { "minScore": 0.95 }],
+        "categories:performance": ["error", { "minScore": 0.9 }],
+        "categories:seo": ["error", { "minScore": 0.95 }],
+        "errors-in-console": ["error", { "maxLength": 0 }],
+        "inspector-issues": ["error", { "maxLength": 0 }]
+      }
+    },
+    "upload": {
+      "outputDir": ".lighthouseci/chat",
+      "target": "filesystem"
+    }
+  }
+}

@@ -12,7 +12,7 @@ export function AppFooter({ isDemo }: AppFooterProps) {
         Приложение не соединяется с серверами мессенджеров напрямую — все запросы идут через API
         GREEN-API.{' '}
         <Link
-          className="rounded-sm font-medium text-accent-button underline outline-none focus-visible:ring-2 focus-visible:ring-focus"
+          className="rounded-sm font-medium text-accent-text underline outline-none focus-visible:ring-2 focus-visible:ring-focus"
           href="/privacy"
         >
           Конфиденциальность

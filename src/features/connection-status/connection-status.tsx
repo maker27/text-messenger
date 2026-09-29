@@ -22,7 +22,9 @@ export function ConnectionStatus({ messengerId }: ConnectionStatusProps) {
       <span role="status">
         {connection.status === 'connecting' && 'Подключение…'}
         {connection.status === 'online' && 'В сети'}
-        {connection.status === 'reconnecting' && 'Переподключение…'}
+        {connection.status === 'reconnecting' && (
+          <ReconnectLabel key={connection.retryAt} retryAt={connection.retryAt} />
+        )}
         {connection.status === 'stopped' &&
           (connection.code === null
             ? 'Получение сообщений остановлено'
@@ -37,13 +39,23 @@ export function ConnectionStatus({ messengerId }: ConnectionStatusProps) {
   );
 }
 
-interface ReconnectCountdownProps {
+interface ReconnectProps {
   retryAt: number;
 }
 
-function ReconnectCountdown({ retryAt }: ReconnectCountdownProps) {
+function ReconnectLabel({ retryAt }: ReconnectProps) {
+  // The retry request is a long poll, so the stream reports its outcome only after it returns.
+  return useRetrySeconds(retryAt) > 0 ? 'Переподключение…' : 'Проверка связи…';
+}
+
+function ReconnectCountdown({ retryAt }: ReconnectProps) {
+  const seconds = useRetrySeconds(retryAt);
+
+  return seconds > 0 && <span aria-hidden>{seconds} с</span>;
+}
+
+function useRetrySeconds(retryAt: number) {
   const [now, setNow] = useState(Date.now);
-  const seconds = Math.max(0, Math.ceil((retryAt - now) / SECOND_MS));
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -55,5 +67,5 @@ function ReconnectCountdown({ retryAt }: ReconnectCountdownProps) {
     };
   }, []);
 
-  return <span aria-hidden>{seconds} с</span>;
+  return Math.max(0, Math.ceil((retryAt - now) / SECOND_MS));
 }

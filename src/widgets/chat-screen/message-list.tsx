@@ -41,7 +41,10 @@ export function MessageList({ chatId, isOffline, onMessageRetry }: MessageListPr
     <div className="chat-wallpaper flex min-h-0 flex-1 flex-col">
       <div
         ref={scrollRef}
-        className="relative flex min-h-0 flex-1 flex-col overflow-y-auto"
+        aria-label="История сообщений"
+        className="relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-inset"
+        role="region"
+        tabIndex={0}
         onScroll={handleListScroll}
       >
         <div aria-live="polite" aria-relevant="additions" className="flex flex-1 flex-col">

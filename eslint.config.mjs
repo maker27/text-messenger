@@ -21,8 +21,15 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ['**/*.mjs'],
+    files: ['**/*.{cjs,mjs}'],
     extends: [tseslint.configs.disableTypeChecked],
+  },
+  {
+    files: ['lighthouse/sign-in.cjs'],
+    rules: {
+      // Lighthouse CI loads the puppeteer script with require().
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   },
   {
     files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'mock/**/*.test.ts'],
@@ -55,6 +62,7 @@ const eslintConfig = defineConfig([
       ],
       'boundaries/files': [
         { category: 'instrumentation', pattern: 'src/instrumentation{,.test}.ts' },
+        { category: 'instrumentation-client', pattern: 'src/instrumentation-client{,.test}.ts' },
         { category: 'proxy', pattern: 'src/proxy{,.test}.ts' },
       ],
     },
@@ -109,6 +117,10 @@ const eslintConfig = defineConfig([
               },
             },
             {
+              from: { file: { categories: 'instrumentation-client' } },
+              allow: { to: { file: { categories: 'instrumentation-client' } } },
+            },
+            {
               from: { file: { categories: 'proxy' } },
               allow: { to: { file: { categories: 'proxy' } } },
             },
@@ -123,7 +135,14 @@ const eslintConfig = defineConfig([
     },
   },
   prettier,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'coverage/**',
+    'storybook-static/**',
+    'next-env.d.ts',
+  ]),
 ]);
 
 export default eslintConfig;

@@ -17,6 +17,7 @@
 [data-messenger="max"] {
   --accent: #007aff;
   --accent-button: #0062d1;
+  --accent-text: light-dark(#0062d1, #5c9dff);
   --avatar-size: 48px;
   --avatar-size-header: 48px;
   --border: light-dark(#9da4ac4d, #ffffff29);
@@ -46,11 +47,6 @@
   --wallpaper-pattern: light-dark(#007aff4d, #505bc74d);
 }
 
-/* Pages outside a messenger face use accent-button as text on dark surfaces too. */
-:root {
-  --accent-button: light-dark(#0062d1, #5c9dff);
-}
-
 :root[data-theme="dark"] [data-messenger="max"] {
   --bubble-out-gradient: linear-gradient(135deg, #8849b4, #735acd, #5d6ae5);
 }
@@ -64,6 +60,7 @@
 [data-messenger="whatsapp"] {
   --accent: light-dark(#1daa61, #21c063);
   --accent-button: light-dark(#168049, #178645);
+  --accent-text: light-dark(#168049, #21c063);
   --avatar-size: 49px;
   --avatar-size-header: 49px;
   --border: light-dark(#0000001a, #ffffff1a);
@@ -96,6 +93,7 @@
 [data-messenger="telegram"] {
   --accent: light-dark(#3390ec, #8774e1);
   --accent-button: light-dark(#256aad, #7363bf);
+  --accent-text: light-dark(#256aad, #9483e6);
   --avatar-size: 54px;
   --avatar-size-header: 42px;
   --border: light-dark(#dfe1e5, #0f0f0f);
@@ -130,6 +128,7 @@
 @theme inline {
   --color-accent: var(--accent);
   --color-accent-button: var(--accent-button);
+  --color-accent-text: var(--accent-text);
   --color-border: var(--border);
   --color-danger: var(--danger);
   --color-bubble-in: var(--bubble-in);

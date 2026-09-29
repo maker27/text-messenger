@@ -1,5 +1,7 @@
 # Multi Messenger
 
+![Демо: чаты в MAX, WhatsApp и Telegram, переключение вкладок и темы](.github/assets/demo.gif)
+
 Веб-клиент для отправки и получения текстовых сообщений через [GREEN-API](https://green-api.com/) в трёх мессенджерах: MAX, WhatsApp и Telegram. Постановка — [docs/test-assignment.md](docs/test-assignment.md).
 
 - Вход по `idInstance` и `apiTokenInstance`, у каждого мессенджера свой инстанс и свой вход.
@@ -99,6 +101,20 @@ pnpm test:e2e
 ```
 
 `pnpm test:e2e` сам поднимает мок и приложение. Чтобы прогнать e2e против уже запущенного стека (например, `docker compose`), задайте `E2E_BASE_URL`.
+
+```bash
+pnpm test:coverage      # покрытие, порог 90% строк для src/server и src/entities
+pnpm size               # бюджет клиентского JS, после pnpm build
+pnpm storybook          # компоненты в темах трёх мессенджеров, http://localhost:6006
+pnpm lighthouse         # после BASE_PATH=/text-messenger pnpm build
+pnpm test:visual        # визуальная регрессия против docker compose
+pnpm showcase           # запись демо и сборка GIF, после pnpm build
+```
+
+- Storybook: в toolbar переключаются мессенджер и тема, вкладка Accessibility показывает проверки axe. Статическая сборка — `pnpm build-storybook` в `storybook-static/`.
+- Lighthouse проверяет страницы входа, чаты и `/privacy` в демо-режиме. Отчёты — в `.lighthouseci/`, в CI — artifact `lighthouse-report`. Нужен Chrome; другой браузер задаётся через `CHROME_PATH`.
+- Эталонные скриншоты снимаются в Docker-образе Playwright, поэтому `pnpm test:visual` работает только против запущенного `docker compose`. После намеренного изменения интерфейса эталоны обновляются командой `pnpm test:visual --update-snapshots`. Диффы упавших сравнений — в `test-results/`.
+- `pnpm showcase` пишет видео в `test-results/showcase/demo.webm` и собирает `.github/assets/demo.gif`. Нужен `ffmpeg`; запись идёт на приложении, которое поднимает сам Playwright, поэтому с заданным `E2E_BASE_URL` команда не запускается.
 
 ## Переменные окружения
 

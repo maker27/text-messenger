@@ -64,7 +64,7 @@ export function MessageBubble({
           )}
           {message.status === 'failed' && (
             <Button
-              className="rounded-sm font-medium text-danger underline outline-none data-disabled:opacity-60 data-focus-visible:ring-2 data-focus-visible:ring-focus"
+              className="rounded-sm font-medium text-bubble-out-text underline outline-none data-disabled:opacity-60 data-focus-visible:ring-2 data-focus-visible:ring-focus"
               isDisabled={isOffline}
               onPress={handleRetryPress}
             >

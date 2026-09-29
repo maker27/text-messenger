@@ -49,7 +49,7 @@ export function MessengerTabs({
                 {unreadCount > 0 && (
                   <span
                     aria-label={`${String(unreadCount)} непрочитанных`}
-                    className="min-w-5 rounded-full bg-accent px-1.5 text-center text-xs leading-5 text-on-accent"
+                    className="min-w-5 rounded-full bg-accent-button px-1.5 text-center text-xs leading-5 text-on-accent"
                   >
                     {unreadCount}
                   </span>

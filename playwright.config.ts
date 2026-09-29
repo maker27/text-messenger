@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type Project } from '@playwright/test';
 
 const APP_PORT = 3200;
 const REAL_APP_PORT = 3201;
@@ -7,12 +7,33 @@ const BASE_URL = `http://localhost:${String(APP_PORT)}/text-messenger/`;
 const REAL_BASE_URL = `http://localhost:${String(REAL_APP_PORT)}/text-messenger/`;
 const TEST_SESSION_SECRET = 'e2e-test-session-secret-with-32-plus-characters';
 const REAL_PROJECT_TAG_PATTERN = /@real/;
+const VISUAL_PROJECT_TAG_PATTERN = /@visual/;
+const SHOWCASE_PROJECT_TAG_PATTERN = /@showcase/;
+const SHOWCASE_VIEWPORT = { height: 720, width: 1280 };
+const MOCK_PROJECT_EXCLUDED_TAG_PATTERN = /@real|@visual|@showcase/;
 const EXTERNAL_BASE_URL = process.env.E2E_BASE_URL;
 
 const mockProject = {
   name: 'chromium',
-  grepInvert: REAL_PROJECT_TAG_PATTERN,
+  grepInvert: MOCK_PROJECT_EXCLUDED_TAG_PATTERN,
   use: { ...devices['Desktop Chrome'] },
+};
+
+const visualProject = {
+  name: 'visual',
+  grep: VISUAL_PROJECT_TAG_PATTERN,
+  expect: { toHaveScreenshot: { animations: 'disabled', caret: 'hide' } },
+  use: { ...devices['Desktop Chrome'] },
+} satisfies Project;
+
+const showcaseProject: Project = {
+  name: 'showcase',
+  grep: SHOWCASE_PROJECT_TAG_PATTERN,
+  use: {
+    ...devices['Desktop Chrome'],
+    video: { mode: 'on', size: SHOWCASE_VIEWPORT },
+    viewport: SHOWCASE_VIEWPORT,
+  },
 };
 
 const realProject = {
@@ -32,7 +53,9 @@ export default defineConfig({
     baseURL: EXTERNAL_BASE_URL ?? BASE_URL,
     trace: 'on-first-retry',
   },
-  projects: EXTERNAL_BASE_URL ? [mockProject] : [mockProject, realProject],
+  projects: EXTERNAL_BASE_URL
+    ? [mockProject, visualProject]
+    : [mockProject, realProject, showcaseProject],
   webServer: EXTERNAL_BASE_URL
     ? undefined
     : [

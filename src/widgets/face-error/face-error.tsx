@@ -17,7 +17,7 @@ export function FaceError({ messenger, onRetry }: FaceErrorProps) {
       </h2>
       <p>{UNEXPECTED_ERROR_MESSAGE}</p>
       <button
-        className="rounded-md border border-border px-4 py-2 font-medium text-accent-button outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-focus"
+        className="rounded-md border border-border px-4 py-2 font-medium text-accent-text outline-none hover:bg-surface-muted focus-visible:ring-2 focus-visible:ring-focus"
         type="button"
         onClick={onRetry}
       >

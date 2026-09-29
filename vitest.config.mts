@@ -6,6 +6,21 @@ export default defineConfig({
     tsconfigPaths: true,
   },
   test: {
+    coverage: {
+      exclude: [
+        'src/**/*.test.{ts,tsx}',
+        'src/**/*.stories.tsx',
+        'src/**/__mocks__/**',
+        'src/shared/testing/**',
+      ],
+      include: ['src/**'],
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      thresholds: {
+        'src/entities/**': { lines: 90 },
+        'src/server/**': { lines: 90 },
+      },
+    },
     env: {
       GREEN_API_MOCK_URL: 'http://127.0.0.1:3100',
       LOG_LEVEL: 'silent',
