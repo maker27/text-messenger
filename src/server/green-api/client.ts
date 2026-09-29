@@ -8,7 +8,7 @@ import type { MessengerConfig } from '@/entities/messenger/model';
 import type { GreenApiError } from '@/shared/errors/model';
 import type { Result } from '@/shared/errors/result';
 
-import { checkAccountSchema, checkWhatsappSchema } from './chat-id';
+import { checkAccountSchema, checkWhatsappSchema, selectWhatsappChatId } from './chat-id';
 import type { GreenApiCredentials } from './credentials';
 import { parseChatHistory } from './history';
 import {
@@ -20,6 +20,7 @@ import { createRequestSpacer } from './request-spacer';
 import {
   chatHistorySchema,
   deleteNotificationSchema,
+  lidModeSchema,
   sendMessageSchema,
   settingsSchema,
   stateInstanceSchema,
@@ -33,11 +34,6 @@ const HISTORY_SPACER_MAX_KEYS = 10_000;
 const RECEIVE_TIMEOUT_SECONDS = 20;
 // Long polling holds the request for up to receiveTimeout, so the transport timeout must outlast it.
 const RECEIVE_REQUEST_TIMEOUT_MS = 25_000;
-
-const CHAT_ID_SCHEMAS = {
-  checkAccount: checkAccountSchema,
-  checkWhatsapp: checkWhatsappSchema,
-} as const;
 
 const historySpacer = createRequestSpacer({
   intervalMs: HISTORY_INTERVAL_MS,
@@ -107,13 +103,36 @@ export function createGreenApiClient(messenger: MessengerConfig, credentials: Gr
     },
 
     resolveChatId: async (phoneNumber: PhoneNumber): Promise<Result<string, GreenApiError>> => {
+      const body = { phoneNumber: Number(phoneNumber) };
+      if (messenger.chatIdStrategy === 'checkAccount') {
+        const result = await requestGreenApi({
+          ...baseRequest,
+          body,
+          method: 'checkAccount',
+          schema: checkAccountSchema,
+        });
+        return result.ok ? result.data : result;
+      }
+      const lidMode = await requestGreenApi({
+        ...baseRequest,
+        method: 'getSettings',
+        schema: lidModeSchema,
+      });
+      if (!lidMode.ok) {
+        return lidMode;
+      }
       const result = await requestGreenApi({
         ...baseRequest,
-        body: { phoneNumber: Number(phoneNumber) },
-        method: messenger.chatIdStrategy,
-        schema: CHAT_ID_SCHEMAS[messenger.chatIdStrategy],
+        body,
+        method: 'checkWhatsapp',
+        schema: checkWhatsappSchema,
       });
-      return result.ok ? result.data : result;
+      if (!result.ok) {
+        return result;
+      }
+      return result.data.ok
+        ? { ok: true, data: selectWhatsappChatId(result.data.data, phoneNumber, lidMode.data) }
+        : result.data;
     },
 
     sendMessage: (chatId: string, text: string): Promise<Result<string, GreenApiError>> =>

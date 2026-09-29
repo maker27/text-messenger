@@ -48,7 +48,13 @@ const MISSING_ACCOUNT_SUFFIX = '0000';
 const ECHO_SENDER_NAME = 'Эхо-бот';
 const ECHO_PREFIX = 'Эхо: ';
 const INSTANCE_STATE = { stateInstance: 'authorized' };
-const INSTANCE_SETTINGS = { incomingWebhook: 'yes', outgoingWebhook: 'yes', webhookUrl: '' };
+const INSTANCE_SETTINGS = {
+  enableLidMode: 'no',
+  incomingWebhook: 'yes',
+  outgoingWebhook: 'yes',
+  webhookUrl: '',
+};
+const MOCK_LID_PREFIX = '10';
 
 const routeSchema = z.object({
   apiTokenInstance: z.string(),
@@ -163,7 +169,13 @@ function lookupAccount(messenger: MockMessenger, phoneNumber: number) {
   const isSupported = messenger.phonePattern.test(phone);
   const isFound = isSupported && !phone.endsWith(MISSING_ACCOUNT_SUFFIX);
   if (messenger.chatIdMethod === 'checkWhatsapp') {
-    return isFound ? { chatId: `${phone}@c.us`, existsWhatsapp: true } : { existsWhatsapp: false };
+    return isFound
+      ? {
+          chatId: `${MOCK_LID_PREFIX}${phone}@lid`,
+          existsWhatsapp: true,
+          phoneNumber: `${phone}@c.us`,
+        }
+      : { existsWhatsapp: false };
   }
   if (!isSupported) {
     return { reason: 'Phone number is not supported', status: false };

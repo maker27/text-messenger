@@ -1,6 +1,15 @@
 import { expect, test } from 'vitest';
 
-import { checkAccountSchema, checkWhatsappSchema, parseChatId, parseRouteChatId } from './chat-id';
+import { parsePhoneNumber } from '@/entities/chat/phone-number';
+
+import {
+  checkAccountSchema,
+  checkWhatsappSchema,
+  parseChatId,
+  parseRouteChatId,
+  selectWhatsappChatId,
+} from './chat-id';
+import { unwrapResult } from './test-server';
 
 test.each([
   [{ chatId: '10000000123', exist: true }, '10000000123'],
@@ -48,11 +57,17 @@ test.each([
   expect(checkAccountSchema.safeParse(response).success).toBe(false);
 });
 
-test.each(['79161234567@c.us', '123456789012345@lid'])('reads WhatsApp chat id %s', (chatId) => {
-  expect(checkWhatsappSchema.parse({ chatId, existsWhatsapp: true })).toEqual({
-    ok: true,
-    data: chatId,
-  });
+const LID_CHAT_ID = '123456789012345@lid';
+const PHONE_CHAT_ID = '79161234567@c.us';
+const PHONE_NUMBER = unwrapResult(parsePhoneNumber('+7 916 123-45-67', null));
+
+test.each([
+  [PHONE_CHAT_ID, { accountChatId: LID_CHAT_ID, phoneChatId: PHONE_CHAT_ID }],
+  ['', { accountChatId: LID_CHAT_ID, phoneChatId: null }],
+])('reads a WhatsApp account with phone number %j', (phoneNumber, account) => {
+  expect(
+    checkWhatsappSchema.parse({ chatId: LID_CHAT_ID, existsWhatsapp: true, phoneNumber }),
+  ).toEqual({ ok: true, data: account });
 });
 
 test('reports a missing WhatsApp account', () => {
@@ -62,12 +77,22 @@ test('reports a missing WhatsApp account', () => {
   });
 });
 
-test.each([{ chatId: '79161234567@g.us', existsWhatsapp: true }, { existsWhatsapp: true }])(
-  'rejects checkWhatsapp response %j',
-  (response) => {
-    expect(checkWhatsappSchema.safeParse(response).success).toBe(false);
-  },
-);
+test.each([
+  { chatId: '79161234567@g.us', existsWhatsapp: true, phoneNumber: PHONE_CHAT_ID },
+  { chatId: LID_CHAT_ID, existsWhatsapp: true },
+  { chatId: LID_CHAT_ID, existsWhatsapp: true, phoneNumber: '79161234567' },
+  { existsWhatsapp: true },
+])('rejects checkWhatsapp response %j', (response) => {
+  expect(checkWhatsappSchema.safeParse(response).success).toBe(false);
+});
+
+test.each([
+  [true, { accountChatId: LID_CHAT_ID, phoneChatId: PHONE_CHAT_ID }, LID_CHAT_ID],
+  [false, { accountChatId: LID_CHAT_ID, phoneChatId: '79161234568@c.us' }, '79161234568@c.us'],
+  [false, { accountChatId: LID_CHAT_ID, phoneChatId: null }, PHONE_CHAT_ID],
+])('selects the WhatsApp chat id with LID mode %s', (isLidModeEnabled, account, chatId) => {
+  expect(selectWhatsappChatId(account, PHONE_NUMBER, isLidModeEnabled)).toBe(chatId);
+});
 
 test.each([
   ['whatsapp', '79161234567@c.us'],

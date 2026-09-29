@@ -18,6 +18,10 @@ export const settingsSchema = z
     isWebhookUrlSet: webhookUrl !== '',
   }));
 
+export const lidModeSchema = z
+  .object({ enableLidMode: webhookFlagSchema })
+  .transform(({ enableLidMode }) => enableLidMode);
+
 export const sendMessageSchema = z
   .object({ idMessage: z.string().min(1) })
   .transform(({ idMessage }) => idMessage);

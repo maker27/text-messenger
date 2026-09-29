@@ -8,7 +8,8 @@ import { getLogger } from '@/server/logger';
 
 import { toMessageStatus, toMilliseconds } from './message';
 
-const RELEVANT_WEBHOOK_TYPES = new Set(['incomingMessageReceived', 'outgoingMessageStatus']);
+const MESSAGE_WEBHOOK_TYPES = ['incomingMessageReceived', 'outgoingMessageReceived'] as const;
+const RELEVANT_WEBHOOK_TYPES = new Set<string>([...MESSAGE_WEBHOOK_TYPES, 'outgoingMessageStatus']);
 const EXTENDED_TEXT_MESSAGE_TYPES = ['extendedTextMessage', 'quotedMessage'] as const;
 const TEXT_MESSAGE_TYPES = new Set<string>([...EXTENDED_TEXT_MESSAGE_TYPES, 'textMessage']);
 
@@ -21,7 +22,7 @@ const notificationHeaderSchema = z.object({
   typeWebhook: z.string(),
 });
 
-const incomingMessageSchema = z.object({
+const messageSchema = z.object({
   idMessage: z.string().min(1),
   messageData: z.union([
     z.object({
@@ -36,7 +37,7 @@ const incomingMessageSchema = z.object({
   ]),
   senderData: z.object({ chatId: z.string(), senderName: z.string().optional() }),
   timestamp: z.int().nonnegative(),
-  typeWebhook: z.literal('incomingMessageReceived'),
+  typeWebhook: z.enum(MESSAGE_WEBHOOK_TYPES),
 });
 
 const outgoingStatusSchema = z.object({
@@ -56,7 +57,7 @@ export interface GreenApiNotification {
   typeInstance: string | null;
 }
 
-function readText(messageData: z.output<typeof incomingMessageSchema>['messageData']) {
+function readText(messageData: z.output<typeof messageSchema>['messageData']) {
   if ('textMessageData' in messageData) {
     return messageData.textMessageData.textMessage;
   }
@@ -67,7 +68,7 @@ function readText(messageData: z.output<typeof incomingMessageSchema>['messageDa
 }
 
 function toNotificationEvent(
-  body: z.output<typeof incomingMessageSchema> | z.output<typeof outgoingStatusSchema>,
+  body: z.output<typeof messageSchema> | z.output<typeof outgoingStatusSchema>,
 ): NotificationEvent | null {
   if (body.typeWebhook === 'outgoingMessageStatus') {
     const status = toMessageStatus(body.status);
@@ -79,12 +80,13 @@ function toNotificationEvent(
   if (text === null) {
     return null;
   }
+  const isIncoming = body.typeWebhook === 'incomingMessageReceived';
   return {
     message: {
       chatId: body.senderData.chatId,
-      direction: 'incoming',
+      direction: isIncoming ? 'incoming' : 'outgoing',
       idMessage: body.idMessage,
-      senderName: body.senderData.senderName ?? null,
+      senderName: isIncoming ? (body.senderData.senderName ?? null) : null,
       sentAt: toMilliseconds(body.timestamp),
       status: null,
       text,
@@ -94,7 +96,7 @@ function toNotificationEvent(
 }
 
 const notificationEventSchema = z
-  .discriminatedUnion('typeWebhook', [incomingMessageSchema, outgoingStatusSchema])
+  .discriminatedUnion('typeWebhook', [messageSchema, outgoingStatusSchema])
   .transform(toNotificationEvent);
 
 export function parseNotification(

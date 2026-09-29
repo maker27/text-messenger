@@ -122,6 +122,44 @@ test('parses an incoming message without a sender name', () => {
   expect(warn).not.toHaveBeenCalled();
 });
 
+test('parses a message sent from the phone as outgoing without a sender name', () => {
+  const notification = parseNotification(
+    {
+      body: {
+        idMessage: 'OUT1',
+        instanceData: INSTANCE_DATA,
+        messageData: {
+          textMessageData: { textMessage: 'С телефона' },
+          typeMessage: 'textMessage',
+        },
+        senderData: {
+          chatId: '79161234567@c.us',
+          chatName: 'Иван',
+          sender: '79000000000@c.us',
+          senderName: 'Владелец',
+        },
+        timestamp: 1_700_000_020,
+        typeWebhook: 'outgoingMessageReceived',
+      },
+      receiptId: 6,
+    },
+    'whatsapp',
+  );
+
+  expect(notification.event).toEqual({
+    message: {
+      chatId: '79161234567@c.us',
+      direction: 'outgoing',
+      idMessage: 'OUT1',
+      senderName: null,
+      sentAt: 1_700_000_020_000,
+      status: null,
+      text: 'С телефона',
+    },
+    type: 'message',
+  });
+});
+
 test('parses an outgoing message status', () => {
   const notification = parseNotification(
     {

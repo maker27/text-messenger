@@ -16,6 +16,7 @@ import {
 
 const INSTANCE_PATH = `/waInstance${TEST_ID_INSTANCE}`;
 const CHAT_ID = '79161234567@c.us';
+const LID_CHAT_ID = '123456789012345@lid';
 const SPACED_ID_INSTANCE = '1101000002';
 const ABORTED_ID_INSTANCE = '1101000003';
 const RELEASED_ID_INSTANCE = '1101000004';
@@ -64,14 +65,39 @@ test('reads the instance state and settings', async () => {
   expect(getLastRequest()?.url).toBe(`${INSTANCE_PATH}/getSettings/${TEST_API_TOKEN_INSTANCE}`);
 });
 
-test('resolves a WhatsApp chat id with checkWhatsapp', async () => {
-  server.setReply({ body: `{"existsWhatsapp":true,"chatId":"${CHAT_ID}"}`, status: 200 });
-
-  expect(await createClient().resolveChatId(PHONE_NUMBER)).toEqual({ ok: true, data: CHAT_ID });
-  expect(getLastRequest()).toMatchObject({
-    body: '{"phoneNumber":79161234567}',
-    url: `${INSTANCE_PATH}/checkWhatsapp/${TEST_API_TOKEN_INSTANCE}`,
+test.each([
+  ['no', CHAT_ID],
+  ['yes', LID_CHAT_ID],
+])('resolves a WhatsApp chat id with LID mode %s', async (enableLidMode, chatId) => {
+  // The test server answers every request alike, so one body serves getSettings and checkWhatsapp.
+  server.setReply({
+    body: JSON.stringify({
+      chatId: LID_CHAT_ID,
+      enableLidMode,
+      existsWhatsapp: true,
+      phoneNumber: CHAT_ID,
+    }),
+    status: 200,
   });
+
+  expect(await createClient().resolveChatId(PHONE_NUMBER)).toEqual({ ok: true, data: chatId });
+  expect(server.requests).toMatchObject([
+    { url: `${INSTANCE_PATH}/getSettings/${TEST_API_TOKEN_INSTANCE}` },
+    {
+      body: '{"phoneNumber":79161234567}',
+      url: `${INSTANCE_PATH}/checkWhatsapp/${TEST_API_TOKEN_INSTANCE}`,
+    },
+  ]);
+});
+
+test('does not check a WhatsApp account when the LID mode is unknown', async () => {
+  server.setReply({ body: '{"existsWhatsapp":true}', status: 200 });
+
+  expect(await createClient().resolveChatId(PHONE_NUMBER)).toEqual({
+    ok: false,
+    error: { code: 'invalidResponse' },
+  });
+  expect(server.requests).toHaveLength(1);
 });
 
 test('resolves a MAX chat id with checkAccount', async () => {

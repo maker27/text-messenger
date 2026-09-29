@@ -76,6 +76,10 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - name: Use Playwright Chromium for Lighthouse
         run: echo "CHROME_PATH=$(node -p "require('@playwright/test').chromium.executablePath()")" >> "$GITHUB_ENV"
+      # Ubuntu 24.04 AppArmor blocks unprivileged user namespaces for binaries without a profile,
+      # so Playwright Chromium cannot start its sandbox; lift the restriction instead of --no-sandbox.
+      - name: Allow Chromium sandbox
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - run: pnpm lighthouse
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}

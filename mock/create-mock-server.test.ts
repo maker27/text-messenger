@@ -63,6 +63,7 @@ test('answers the state and settings of an instance', async () => {
 
   expect(await state.json()).toEqual({ stateInstance: 'authorized' });
   expect(await settings.json()).toEqual({
+    enableLidMode: 'no',
     incomingWebhook: 'yes',
     outgoingWebhook: 'yes',
     webhookUrl: '',
@@ -119,7 +120,10 @@ test.each([
 });
 
 test.each([
-  [79161234567, { chatId: WHATSAPP_CHAT_ID, existsWhatsapp: true }],
+  [
+    79161234567,
+    { chatId: '1079161234567@lid', existsWhatsapp: true, phoneNumber: WHATSAPP_CHAT_ID },
+  ],
   [79160000000, { existsWhatsapp: false }],
 ])('answers WhatsApp checkWhatsapp for %i', async (phoneNumber, expected) => {
   const response = await postJson(
