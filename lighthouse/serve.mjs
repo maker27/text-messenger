@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 
+const APP_HOST = '127.0.0.1';
 const APP_PORT = 3200;
 const MOCK_PORT = 3100;
 const MOCK_READY_PATTERN = /listening/;
@@ -19,6 +20,7 @@ function startApp() {
     env: {
       ...process.env,
       GREEN_API_MOCK_URL: `http://127.0.0.1:${String(MOCK_PORT)}`,
+      HOSTNAME: APP_HOST,
       PORT: String(APP_PORT),
       REAL_MODE_ENABLED: 'false',
       SESSION_SECRET: randomBytes(SESSION_SECRET_BYTES).toString('base64'),

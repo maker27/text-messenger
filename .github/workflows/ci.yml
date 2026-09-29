@@ -73,12 +73,16 @@ jobs:
           cache: true
           require-lockfile: true
       - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Use Playwright Chromium for Lighthouse
+        run: echo "CHROME_PATH=$(node -p "require('@playwright/test').chromium.executablePath()")" >> "$GITHUB_ENV"
       - run: pnpm lighthouse
       - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: lighthouse-report
           path: .lighthouseci/
+          include-hidden-files: true
           retention-days: 7
 
   e2e:
