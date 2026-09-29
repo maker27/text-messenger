@@ -1,0 +1,33 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  app:
+    image: ghcr.io/maker27/text-messenger:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      args:
+        BASE_PATH: ${BASE_PATH:-}
+    env_file: .env
+    environment:
+      GREEN_API_MOCK_URL: http://mock:3100
+    ports:
+      - 127.0.0.1:${APP_PORT:?APP_PORT is required}:3000
+    depends_on:
+      mock:
+        condition: service_healthy
+    mem_limit: 256m
+    restart: unless-stopped
+    logging: *logging
+
+  mock:
+    image: ghcr.io/maker27/text-messenger-mock:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: mock/Dockerfile
+    mem_limit: 64m
+    restart: unless-stopped
+    logging: *logging

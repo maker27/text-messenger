@@ -53,7 +53,10 @@ const eslintConfig = defineConfig([
         { type: 'shared', pattern: 'src/shared' },
         { type: 'server', pattern: 'src/server/*' },
       ],
-      'boundaries/files': [{ category: 'proxy', pattern: 'src/proxy{,.test}.ts' }],
+      'boundaries/files': [
+        { category: 'instrumentation', pattern: 'src/instrumentation{,.test}.ts' },
+        { category: 'proxy', pattern: 'src/proxy{,.test}.ts' },
+      ],
     },
     rules: {
       'boundaries/dependencies': [
@@ -98,6 +101,12 @@ const eslintConfig = defineConfig([
             {
               from: { element: { type: 'server' } },
               allow: { to: { element: { types: { anyOf: ['server', 'entities', 'shared'] } } } },
+            },
+            {
+              from: { file: { categories: 'instrumentation' } },
+              allow: {
+                to: [{ file: { categories: 'instrumentation' } }, { element: { type: 'server' } }],
+              },
             },
             {
               from: { file: { categories: 'proxy' } },

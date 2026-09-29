@@ -1,0 +1,13 @@
+*
+!mock/*.ts
+!mock/package.json
+!next.config.ts
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!postcss.config.mjs
+!src
+!tsconfig.json
+mock/*.test.ts
+src/**/*.test.ts
+src/**/*.test.tsx

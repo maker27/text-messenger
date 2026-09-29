@@ -53,6 +53,10 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    env:
+      APP_PORT: 3200
+      BASE_PATH: /text-messenger
+      E2E_BASE_URL: http://localhost:3200/text-messenger/
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/setup@v3
@@ -60,15 +64,23 @@ jobs:
           cache: true
           require-lockfile: true
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm build
-        env:
-          BASE_PATH: /text-messenger
+      - name: Write compose env
+        run: |
+          {
+            echo "SESSION_SECRET=$(openssl rand -base64 32)"
+            echo "REAL_MODE_ENABLED=false"
+            echo "APP_PORT=$APP_PORT"
+          } > .env
+      - run: docker compose up -d --build --wait
       - run: pnpm test:e2e
+      - if: ${{ failure() }}
+        run: docker compose logs --no-color > compose.log
       - uses: actions/upload-artifact@v4
         if: ${{ failure() }}
         with:
-          name: playwright-report
+          name: e2e-report
           path: |
             playwright-report/
             test-results/
+            compose.log
           retention-days: 7

@@ -1,0 +1,63 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SHA: ${{ github.event.workflow_run.head_sha }}
+      BASE_PATH: ${{ vars.BASE_PATH }}
+      APP_IMAGE: ghcr.io/maker27/text-messenger
+      MOCK_IMAGE: ghcr.io/maker27/text-messenger-mock
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.SHA }}
+      - name: Build images
+        run: |
+          docker build --build-arg BASE_PATH="$BASE_PATH" -t "$APP_IMAGE:$SHA" -t "$APP_IMAGE:latest" .
+          docker build -f mock/Dockerfile -t "$MOCK_IMAGE:$SHA" -t "$MOCK_IMAGE:latest" .
+      - name: Log in to GHCR
+        if: vars.PUBLISH_IMAGES == 'true'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+        run: echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+      - name: Push images
+        if: vars.PUBLISH_IMAGES == 'true'
+        run: |
+          docker push --all-tags "$APP_IMAGE"
+          docker push --all-tags "$MOCK_IMAGE"
+      - name: Configure SSH
+        if: vars.PUBLISH_IMAGES == 'true'
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Deploy
+        if: vars.PUBLISH_IMAGES == 'true'
+        env:
+          TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          scp -i ~/.ssh/id_deploy docker-compose.yml deploy/deploy.sh "$TARGET:$DEPLOY_PATH/"
+          ssh -i ~/.ssh/id_deploy "$TARGET" "cd '$DEPLOY_PATH' && ./deploy.sh '$SHA' '$BASE_PATH'"
